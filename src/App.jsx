@@ -1,6 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Sidebar from './components/Sidebar';
-import MyProjects from './pages/My Projects/MyProjects'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import MyProjects from './pages/My Projects/MyProjects';
 
 function App() {
   return (
@@ -10,7 +9,7 @@ function App() {
         <Route path="/my-projects" element={<MyProjects />} />
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

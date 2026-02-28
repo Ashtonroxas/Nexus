@@ -1,17 +1,10 @@
-import Sidebar from "../../components/Sidebar";
-import { Container, Row, Col } from "react-bootstrap";
-import styles from "./MyProjects.module.css";
+import NexusLayout from "../../layouts/NexusLayout";
 
 function MyProjects() {
   return (
-    <Container fluid>
-      <Row>
-        <Sidebar />
-        <Col lg={10} md={9} className={styles.dashboard}>
-          <h1>My Projects</h1>
-        </Col>
-      </Row>
-    </Container>
+    <NexusLayout>
+      <h1>My Projects</h1>
+    </NexusLayout>
   );
 }
 
