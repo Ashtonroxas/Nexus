@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MyProjects from './pages/My Projects/MyProjects';
+import MyProjects from './pages/MyProjects/MyProjects';
 
 function App() {
   return (
