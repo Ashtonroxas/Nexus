@@ -3,6 +3,7 @@ import NexusLayout from "../../layouts/NexusLayout";
 import { Row, Col, Form, Button } from "react-bootstrap";
 import styles from "./MyProjects.module.css";
 import ProjectCard from "./components/ProjectCard/ProjectCard";
+import { Link } from "react-router-dom";
 
 function MyProjects() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,6 +55,7 @@ function MyProjects() {
       </Row>
       <Row className="p-3">
         <ProjectCard project={dummyProject} />
+        <Link to="/projects/abc123"> Project ABC123 </Link>
       </Row>
     </>
   );
