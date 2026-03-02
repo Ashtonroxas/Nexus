@@ -25,7 +25,7 @@ function MyProjects() {
   };
 
   return (
-    <NexusLayout>
+    <>
       <Row className="p-3">
         <Form onSubmit={(e) => handleSearch(e)}>
           <Form.Control
@@ -55,7 +55,7 @@ function MyProjects() {
       <Row className="p-3">
         <ProjectCard project={dummyProject} />
       </Row>
-    </NexusLayout>
+    </>
   );
 }
 
