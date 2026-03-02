@@ -1,0 +1,22 @@
+.blueprintContainer {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 2rem); 
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.blueprintHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f8f9fa;
+}
+
+.blueprintCanvas {
+  flex-grow: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
