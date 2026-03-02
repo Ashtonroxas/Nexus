@@ -12,7 +12,7 @@ function Sidebar() {
 
   return (
     <Col lg={2} sm={3} className={`${styles.sidebar} d-none d-md-block p-3 h-100`}>
-      <div className= {`${styles.header} py-0 my-0`} >
+      <div className= {`${styles.header} py-0 mt-0`} >
         <div className={styles.brand}>Nexus</div>
         <img src={logo} alt="Nexus Logo" width="47px" />
       </div>
