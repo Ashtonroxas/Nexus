@@ -1,4 +1,76 @@
+:root {
+    --sidebar-background: #F7F8FC;
+    --active-item-bg: #E9EDFF;
+}
+
 .sidebar {
-    background-color: #F7F8FC;
-    border-right: 1px solid rgba(107, 114, 128, 0.33);
+    background-color: var(--sidebar-background);
+    border-right: 1px solid var(--stroke-faded);
+
+    min-width: 240px;
+    max-width: 280px;
+    min-height: 100vh;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    margin: 0;
+}
+
+.brand {
+    font-weight: 700;
+    font-size: 2.25rem;
+    color: #000000;
+}
+
+.separator {
+    border: none;
+    border-top: 1px solid var(--stroke-solid);
+    margin-top: 0px;
+}
+
+.backLink {
+    display:flex;
+    align-items: center;
+    gap: 10px;
+
+    font-weight: 500;
+    color: #000000;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-top: 0px;
+    margin-bottom: 30px;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.navButton {
+    display: block;
+    text-decoration: none;
+    text-align: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #000000;
+    height: 45px;
+    margin-bottom: 10px;
+}
+
+.active {
+    background-color: var(--active-item-bg);
+}
+
+.sectionTitle {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #000000;
+    margin-top: 20px;
+    margin-bottom: 10px;
 }

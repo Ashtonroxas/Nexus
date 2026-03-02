@@ -1,3 +1,5 @@
 .content {
-    background-color: #F5F5F5;
+    background-color: var(--background);
+    min-width: 0;
+    min-height: 100vh;
 }

@@ -1,14 +1,15 @@
 import Sidebar from "../components/Sidebar/Sidebar";
 import { Container, Row, Col } from "react-bootstrap";
+import { Outlet } from "react-router-dom";
 import styles from "./NexusLayout.module.css";
 
-function NexusLayout({ children }) {
+function NexusLayout() {
   return (
-    <Container fluid>
-      <Row className="min-vh-100">
+    <Container fluid className="px-0">
+      <Row className="min-vh-100 g-0 flex-nowrap">
         <Sidebar />
-        <Col lg={10} sm={9} className={`${styles.content} p-3`}>
-          {children}
+        <Col className={`${styles.content} p-3`}>
+          <Outlet />
         </Col>
       </Row>
     </Container>
