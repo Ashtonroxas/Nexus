@@ -9,14 +9,14 @@ const initialNodes = [
   { 
     id: '1', 
     position: { x: 100, y: 100 }, 
-    data: { label: ' Node 1' },
+    data: { label: ' Task 1' },
     sourcePosition: 'right', // outgoing dot to  right side
     targetPosition: 'left'   // incoming dot to  left side
   },
   { 
     id: '2', 
     position: { x: 400, y: 200 }, 
-    data: { label: ' Node 2' },
+    data: { label: ' Task 2' },
     sourcePosition: 'right',
     targetPosition: 'left'
   },
@@ -49,14 +49,14 @@ export default function DependencyGraph() {
 
   //Function to generate and add a new node
   const handleAddNode = () => {
-    const newNodeId = `node-${Math.random().toString(36)}`;
+    const newNodeId = `Task-${Math.random().toString(36)}`;
     const newNode = {
       id: newNodeId,
       position: { 
         x: Math.random() * 200 + 100, 
         y: Math.random() * 200 + 100 
       }, 
-      data: { label: ` Node ${nodes.length + 1}` },
+      data: { label: ` Task ${nodes.length + 1}` },
       sourcePosition: 'right', 
       targetPosition: 'left'   
     };
@@ -80,9 +80,8 @@ export default function DependencyGraph() {
             style={{ backgroundColor: '#6366F1', border: 'none' }}
             onClick={handleAddNode}
           >
-            + Add Node
+            + Add Task
           </button>
-          <button className="btn btn-outline-secondary btn-sm bg-white">Auto-Layout</button>
         </div>
 
         <ReactFlow 
