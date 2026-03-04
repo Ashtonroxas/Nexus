@@ -69,7 +69,7 @@ export default function DependencyGraph() {
       
       <div className={styles.blueprintHeader}>
         <h2 className="m-0 fw-bold">Dependency Graph</h2>
-        <p className="text-muted m-0 mt-1">Basic foundation</p>
+        <p className="text-muted m-0 mt-1">Relational task dependency overview</p>
       </div>
 
       <div className={styles.blueprintCanvas}>

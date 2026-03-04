@@ -1,17 +1,23 @@
-import { Col, Nav } from "react-bootstrap";
-import { Link ,NavLink, useLocation, useParams } from "react-router-dom";
+import { Link, NavLink, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft } from 'lucide-react';
 import styles from "./Sidebar.module.css";
 import logo from "../../assets/nexus.png";
 
-function Sidebar() {
+function Sidebar({ variant = "desktop", onNavigate }) {
   const { pathname } = useLocation();
   const { projectId} = useParams();
 
   const projectSidebar = pathname.startsWith("/projects/") && !!projectId;
+  const wrapperStyling = variant === "desktop"
+                    ? `${styles.sidebar} d-none d-lg-block p-3 h-100`
+                    : `${styles.sidebar} p-3 h-100`
+
+  const handleNav = () => {
+    if (onNavigate) onNavigate();
+  }
 
   return (
-    <Col lg={2} sm={3} className={`${styles.sidebar} d-none d-md-block p-3 h-100`}>
+    <div className={wrapperStyling}>
       <div className= {`${styles.header} py-0 mt-0`} >
         <div className={styles.brand}>Nexus</div>
         <img src={logo} alt="Nexus Logo" width="47px" />
@@ -21,7 +27,7 @@ function Sidebar() {
 
       { projectSidebar ? (
         <> {/* Inside Project Menu */}
-          <Link to="/projects" className={styles.backLink}>
+          <Link to="/projects" className={styles.backLink} onClick={handleNav}>
             <ArrowLeft size={18} />
             Back to My Projects
           </Link>
@@ -36,6 +42,7 @@ function Sidebar() {
               className={({ isActive }) =>
                 `${styles.navButton} ${isActive ? styles.active : ""}`
               }
+              onClick={handleNav}
             >
               Dependency Graph
             </NavLink>
@@ -45,6 +52,7 @@ function Sidebar() {
               className={({ isActive }) =>
                 `${styles.navButton} ${isActive ? styles.active : ""}`
               }
+              onClick={handleNav}
             >
               Risk Report
             </NavLink>
@@ -54,6 +62,7 @@ function Sidebar() {
               className={({ isActive }) => 
                 `${styles.navButton} ${isActive ? styles.active : ""}`
               }
+              onClick={handleNav}
             >
               Team
             </NavLink>
@@ -67,6 +76,7 @@ function Sidebar() {
               className={({ isActive }) => 
                 `${styles.navButton} ${isActive ? styles.active : ""}`
               }
+              onClick={handleNav}
             >
               My Projects
             </NavLink>
@@ -76,15 +86,15 @@ function Sidebar() {
               className={({ isActive }) => 
                 `${styles.navButton} ${isActive ? styles.active : ""}`
               }
+              onClick={handleNav}
             >
               Profile
             </NavLink>
 
           </nav>
         </>
-      )
-      }
-    </Col>
+      )}
+    </div>
   );
 }
 

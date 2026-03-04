@@ -1,17 +1,21 @@
+:root {
+  --outlines: #E5E7EB;
+}
+
 .blueprintContainer {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 2rem); 
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--outlines);
   overflow: hidden;
 }
 
 .blueprintHeader {
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--outlines);
+  background-color: var(--background);
 }
 
 .blueprintCanvas {
@@ -30,8 +34,14 @@
   padding: 10px 15px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--outlines);
   z-index: 10;
   display: flex;
   gap: 10px;
+}
+
+@media (max-width: 991.99px) {
+  .blueprintHeader {
+      padding-left: 75px;
+  }
 }
