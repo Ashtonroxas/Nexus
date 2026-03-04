@@ -38,9 +38,9 @@ function ProjectCard({ project, onClick }) {
       <hr />
 
       <div className="d-flex justify-content-between text-muted small">
-        <span><Users size={16} />{project.numMembers}</span>
+        <span><Users size={16} className="me-1" />{project.numMembers}</span>
         <span>
-          <Calendar size={16} />
+          <Calendar size={16} className="me-1" />
           {new Date(project.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
         </span>
       </div>
