@@ -55,10 +55,16 @@ function ProjectCard({ project, onClick }) {
         </Modal.Header>
         <Modal.Body>Are you sure you want to delete this project for everyone? This action cannot be undone.</Modal.Body>
         <Modal.Footer className="justify-content-center gap-2 border-0">
-          <Button id = {styles["snd-button"]} variant="secondary" onClick={handleClose}>
+          <Button id = {styles["snd-button"]} variant="secondary" onClick = {(e) => {
+            e.stopPropagation();
+            handleClose();
+          }}>
             Cancel
           </Button>
-          <Button id = {styles["fst-button"]} variant="primary" onClick={handleClose}>
+          <Button id = {styles["fst-button"]} variant="primary" onClick = {(e) => {
+            e.stopPropagation();
+            handleClose();
+          }}>
             <i>DELETE</i>
           </Button>
         </Modal.Footer>
