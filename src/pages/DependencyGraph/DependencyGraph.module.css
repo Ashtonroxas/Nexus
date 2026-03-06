@@ -20,3 +20,18 @@
   height: 100%;
   position: relative;
 }
+
+/*floating action panel*/
+.floatingToolbar {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+}
