@@ -1,15 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import styles from "./MyProjects.module.css";
 import ProjectCard from "./components/ProjectCard/ProjectCard";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpDown } from "lucide-react";
 
+import { collection, onSnapshot } from "firebase/firestore";
+import db from "../../firebase/firebase";
+
 function MyProjects() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const numProjects = 4; // Placeholder for the number of projects
   const [sortBy, setSortBy] = useState("recent");
+
+  // Begin firebase testing
+   const [projects, setProjects] = useState([]);
+
+   useEffect(() => {
+    const projCollection = collection(db, "projects");
+    const unsubscribe = onSnapshot(projCollection, (snapshot) => {
+      const projectsArr = snapshot.docs.map((doc) => {
+        const data = doc.data();
+
+        return {
+        id: doc.id,
+        name: data.name,
+        description: data.description,
+        completedTasks: data.completedTaskCount,
+        totalTasks: data.taskCount,
+        owner: data.ownerId,
+        }
+      });
+
+      setProjects(projectsArr);
+      console.log(projectsArr);
+    });
+
+    return () => unsubscribe();
+   }, []);
+  // End firebase testing
 
   const dummyProject = [
     {
