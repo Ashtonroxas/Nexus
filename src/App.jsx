@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MyProjects from './pages/MyProjects/MyProjects';
 import NexusLayout from './layouts/NexusLayout';
 import DependencyGraph from './pages/DependencyGraph/DependencyGraph';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
 
 function App() {
   return (
@@ -11,7 +12,7 @@ function App() {
           {/* Main Pages */}
           <Route path="/" element={<Navigate to="/projects" replace />} />
           <Route path="/projects" element={<MyProjects />} />
-          <Route path="/profile" element={<div>Coming Soon</div>} />
+          <Route path="/profile" element={<ProfilePage />} />
         
           {/* Project Pages */}
           <Route path="/projects/:projectId" element={<DependencyGraph />} />
