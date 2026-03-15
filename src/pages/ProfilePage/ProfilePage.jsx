@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Row, Col, Card, Form, Button, Dropdown } from "react-bootstrap";
 import emailIcon from "../../assets/email-icon.png";
 import avatarimg from "../../assets/avatar.png";
+import testavatarimg from "../../assets/test-avatar.png";
+import styles from "./ProfilePage.module.css";
 
 
 
@@ -9,6 +11,7 @@ function ProfilePage() {
 
     const dummyUserData = {
         avatar:avatarimg,
+        testavatar:testavatarimg,
         firstName: "John",
         lastName: "Doe",
         email: "john@nexus.com",
@@ -100,26 +103,26 @@ function ProfilePage() {
                     <Card className = "p-4 shadow-sm rounded-4">
                         <div className = "d-flex justify-content-between align-items-center">
                             <div className = "d-flex align-items-center">
-                                <div className="bg-light rounded-circle me-3 d-flex align-items-center justify-content-center overflow-hidden" 
-                                style={{ width: '100px', height: '100px', flexShrink: 0 }}>
+                                <div className={styles["avatar-size"]}>
                                     <img 
                                     ref = {imgRef}
-                                    src = {user.avatar}
+                                    src = {user.testavatar}
                                     onLoad = {handleImageLoad} 
-                                    alt = "Avatar" 
+                                    alt = "Test-Avatar" 
                                     //crossOrigin="anonymous" for non-local images
-                                    style = {{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    className = {styles["avatar-img-size"]}
+                                    /*style = {{ width: '100%', height: '100%', objectFit: 'cover' }}*/ />
                                 </div>
                                 <div>
                                     <h3 className = "fw-bold">{user.firstName} {user.lastName}</h3>
                                     <p className = "text-muted mb-0">{user.jobTitle}</p>
                                     <span className = "d-flex align-items-center">
-                                        <img src={emailIcon} alt="Email Icon" style={{verticalAlign:'bottom', height:'2em', width: 'auto', opacity:0.5}}></img>
-                                        <p className = "text-muted mb-0" style={{ fontSize: '0.8rem' }}>{user.email}</p>
+                                        <img src={emailIcon} alt="Email Icon" className = {styles["email-img-size"]}></img>
+                                        <p className = {styles["user-email"]}>{user.email}</p>
                                     </span>
                                 </div>
                             </div>
-                            <Button variant = "outline-danger" className = "shadow-sm fw-bold border-opacity-25">Sign Out</Button>
+                            <Button variant = "outline-danger" className = {styles["sign-out"]}>Sign Out</Button>
                         </div>
                     </Card>
                 </Col>
@@ -148,7 +151,7 @@ function ProfilePage() {
                         <Row>
                             {/*First Name*/}
                             <Col md={6} className = "mb-3 text-start">
-                            <label className = "small fw-bold mb-1 d-block">First Name</label>
+                            <label className = {styles["column-text"]}>First Name</label>
                             {
                                 isEditing ?
                                 (
@@ -165,7 +168,7 @@ function ProfilePage() {
 
                             {/*Last Name*/}
                             <Col md={6} className = "mb-3 text-start">
-                            <label className = "small fw-bold mb-1 d-block">Last Name</label>
+                            <label className = {styles["column-text"]}>Last Name</label>
                             {
                                 isEditing ?
                                 (
@@ -184,7 +187,7 @@ function ProfilePage() {
                         <Row>
                             {/*Email*/}
                             <Col md={6} className = "mb-3 text-start">
-                            <label className = "small fw-bold mb-1 d-block">Email</label>
+                            <label className = {styles["column-text"]}>Email</label>
                             {
                                 isEditing ?
                                 (
@@ -201,7 +204,7 @@ function ProfilePage() {
 
                             {/*Phone Number*/}
                             <Col md={6} className = "mb-3 text-start">
-                            <label className = "small fw-bold mb-1 d-block">Phone Number</label>
+                            <label className = {styles["column-text"]}>Phone Number</label>
                             {
                                 isEditing ?
                                 (
@@ -220,7 +223,7 @@ function ProfilePage() {
                         <Row>
                             {/*Job Title*/}
                             <Col md={6} className = "mb-3 text-start">
-                            <label className = "small fw-bold mb-1 d-block">Job Title</label>
+                            <label className = {styles["column-text"]}>Job Title</label>
                             {
                                 isEditing ?
                                 (
@@ -237,7 +240,7 @@ function ProfilePage() {
 
                             {/*Department*/}
                             <Col md={6} className = "mb-3 text-start">
-                            <label className = "small fw-bold mb-1 d-block">Department</label>
+                            <label className = {styles["column-text"]}>Department</label>
                             {
                                 isEditing ?
                                 (
@@ -261,7 +264,7 @@ function ProfilePage() {
                 <Col md={6}>
                     <Card className = "p-4 shadow-sm rounded-4 border-1 h-100">
                         <div className = "text-center">
-                            <label className = "fw-bold fs-4 d-block">Projects</label>
+                            <label className = {styles["stats-text"]}>Projects</label>
                             <div className="border-top" style={{ height: '1px', marginLeft: '-1.5rem', marginRight: '-1.5rem' }}></div>
                             <h3 className = "display-4 fw-bold mb-0" style={{ color: accentColor, transition: 'color 0.4s ease' }}>{user.numProjects}</h3>
                         </div>
@@ -271,7 +274,7 @@ function ProfilePage() {
                 <Col md={6}>
                     <Card className = "p-4 shadow-sm rounded-4 border-1 h-100">
                         <div className = "text-center">
-                            <label className = "fw-bold fs-4 d-block">Months Active</label>
+                            <label className = {styles["stats-text"]}>Months Active</label>
                             <div className="border-top" style={{ height: '1px', marginLeft: '-1.5rem', marginRight: '-1.5rem' }}></div>
                             <h3 className = "display-4 fw-bold mb-0" style={{ color: accentColor, transition: 'color 0.4s ease' }}>{user.monthsActive}</h3>
                         </div>
