@@ -1,3 +1,7 @@
+body {
+  background-color: var(--background) !important;
+}
+
 #dashboard-buttons {
     display: flex;
     justify-content: flex-end;

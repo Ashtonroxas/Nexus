@@ -1,5 +1,6 @@
 #project-card {
     background-color: #FFFFFF;
+    border: 1px solid var(--stroke-faded);
     max-width: 350px;
     min-width: 350px;
     min-height: 350px;
