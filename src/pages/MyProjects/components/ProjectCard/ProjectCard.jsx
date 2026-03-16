@@ -2,6 +2,9 @@ import { Col, ProgressBar, Button, Modal } from "react-bootstrap";
 import styles from "./ProjectCard.module.css";
 import { X, Users, Calendar, CheckSquare } from "lucide-react";
 import { useState } from "react";
+import { motion } from 'framer-motion';
+
+const MotionCol = motion(Col);
 
 function ProjectCard({ project, onClick }) {
   const progress = Math.round((project.completedTasks / project.totalTasks) * 100);
@@ -34,7 +37,8 @@ function ProjectCard({ project, onClick }) {
           </Button>
         </Modal.Footer>
       </Modal>
-      <Col id={styles["project-card"]} className="rounded-4 p-4" onClick={onClick} role="button">
+      <MotionCol layout transition = {{layout: {duration: 0.4, ease: "easeInOut"}}}
+        id={styles["project-card"]} className="rounded-4 p-4" onClick={onClick} role="button">
         <div className="d-flex justify-content-between">
           <CheckSquare size={50} color={project.color} />
           {project.owner === 1 && (
@@ -77,7 +81,7 @@ function ProjectCard({ project, onClick }) {
             {new Date(project.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
           </span>
         </div>
-      </Col>
+      </MotionCol>
     </>
   );
 }

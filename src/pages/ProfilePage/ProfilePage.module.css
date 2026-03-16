@@ -1,0 +1,85 @@
+.avatar-size {
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+    min-height: 100px;
+    
+    background-color: #f8f9fa;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    flex-shrink: 0;
+}
+
+.sign-out {
+    font-weight: bold;
+    border: 1px solid rgba(0,0,0,.25);
+    box-shadow: 0 0px 0px rgba(0,0,0,0.05);
+}
+
+.avatar-img-size {
+    width: 100%;
+    height: 100%;
+    object-fit: 'cover';
+}
+
+.email-img-size {
+    vertical-align: 'bottom';
+    height: 2em;
+    width: auto;
+    opacity: 0.5;
+}
+
+.user-email {
+    color: lightslategray;
+    margin-bottom: 0;
+    font-size: 0.8rem;
+}
+
+.column-text {
+    font-size: small;
+    font-weight: bold;
+    margin-bottom: 1;
+    display: block;
+}
+
+.stats-text {
+    font-weight: bold;
+    font-size: large;
+    display: block;
+}
+
+/*
+.border-top {
+    border: 1px;
+    border-style: solid;
+    height: 1px;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+}
+
+.email-text {
+    font-size: small;
+    font-weight: bold;
+    margin-bottom: 1;
+    display: block;
+}
+
+.fst-name{
+    font-size: small;
+    font-weight: bold;
+    margin-bottom: 1;
+    display: block;
+}
+
+.lst-name{
+    font-size: small;
+    font-weight: bold;
+    margin-bottom: 1;
+    display: block;
+}
+    */
