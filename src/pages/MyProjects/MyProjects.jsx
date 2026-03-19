@@ -90,8 +90,8 @@ function MyProjects() {
   };
 
   return (
-    <>
-      <Row className="p-3">
+    <div className="d-flex flex-column">
+      <Row className="p-3 order-2 order-lg-1">
         <Form onSubmit={(e) => handleSearch(e)}>
           <Form.Control
             type="search"
@@ -103,12 +103,12 @@ function MyProjects() {
           />
         </Form>
       </Row>
-      <Row className="p-3">
-        <Col>
+      <Row className="p-3 order-1 order-lg-2">
+        <Col xs={12} lg>
           <h2>My Projects</h2>
           <p>View and manage all your projects • {numProjects} active projects</p>
         </Col>
-        <Col id={styles["dashboard-buttons"]}>
+        <Col xs={12} lg="auto" id={styles["dashboard-buttons"]}>
           <div className={styles.sortDropdown}>
             <Dropdown>
               <Dropdown.Toggle id={styles["sort-by"]} size="lg">
@@ -132,7 +132,7 @@ function MyProjects() {
           </Button>
         </Col>
       </Row>
-      <Row className="p-3 gap-3">
+      <Row className="p-3 gap-3 justify-content-center order-3">
         {sortedProjects.map((project) => (
           <ProjectCard 
             key={project.id}
@@ -141,7 +141,7 @@ function MyProjects() {
           />
         ))}
       </Row>
-    </>
+    </div>
   );
 }
 
