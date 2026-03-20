@@ -13,7 +13,7 @@ import {
   useReactFlow   
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import NexusLayout from '../../layouts/NexusLayout';
+import { useOutletContext } from "react-router-dom";
 import styles from './DependencyGraph.module.css';
 
 // Updated TextUpdaterNode 
@@ -97,6 +97,8 @@ export default function DependencyGraph() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  const { menuButton } = useOutletContext();
+
   const onConnect = useCallback(
     (params) => {
       const newEdge = {
@@ -130,8 +132,13 @@ export default function DependencyGraph() {
     <div className={styles.blueprintContainer}>
       
       <div className={styles.blueprintHeader}>
-        <h2 className="m-0 fw-bold">Dependency Graph</h2>
-        <p className="text-muted m-0 mt-1">Relational task dependency overview</p>
+        <div className={styles.mobileHeader}>
+          { menuButton }
+          <div>
+            <h2 className="m-0 fw-bold">Dependency Graph</h2>
+            <p className="text-muted m-0 mt-1">Relational task dependency overview</p>
+          </div>
+        </div>
       </div>
 
       <div className={styles.blueprintCanvas}>

@@ -46,3 +46,15 @@ body {
   background: transparent;
   color: #6366F1;
 }
+
+.mobileHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+@media (min-width: 992px) {
+  .mobileHeader {
+    display: block;
+  }
+}

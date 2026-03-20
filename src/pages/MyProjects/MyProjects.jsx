@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import styles from "./MyProjects.module.css";
 import ProjectCard from "./components/ProjectCard/ProjectCard";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { ArrowUpDown } from "lucide-react";
 
 import { collection, onSnapshot } from "firebase/firestore";
@@ -13,6 +13,7 @@ function MyProjects() {
   const [searchTerm, setSearchTerm] = useState("");
   const numProjects = 4; // Placeholder for the number of projects
   const [sortBy, setSortBy] = useState("recent");
+  const { menuButton } = useOutletContext();
 
   // Begin firebase testing
    const [projects, setProjects] = useState([]);
@@ -105,8 +106,13 @@ function MyProjects() {
       </Row>
       <Row className="p-3 order-1 order-lg-2">
         <Col xs={12} lg>
-          <h2>My Projects</h2>
-          <p>View and manage all your projects • {numProjects} active projects</p>
+          <div className={styles.mobileHeader}>
+            {menuButton}
+            <div>
+              <h2>My Projects</h2>
+              <p>View and manage all your projects • {numProjects} active projects</p>
+            </div>
+          </div>
         </Col>
         <Col xs={12} lg="auto" id={styles["dashboard-buttons"]}>
           <div className={styles.sortDropdown}>

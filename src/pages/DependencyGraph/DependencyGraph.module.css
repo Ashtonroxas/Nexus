@@ -40,8 +40,14 @@
   gap: 10px;
 }
 
-@media (max-width: 991.99px) {
-  .blueprintHeader {
-      padding-left: 75px;
+.mobileHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+@media (min-width: 992px) {
+  .mobileHeader {
+    display: block;
   }
 }
