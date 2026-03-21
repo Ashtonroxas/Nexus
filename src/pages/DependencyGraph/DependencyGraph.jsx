@@ -180,6 +180,7 @@ export default function DependencyGraph() {
         name: trimmedName,
         description: trimmedDescription,
         color: projectColor,
+        updatedAt: serverTimestamp(),
       });
       setSaveStatus("saved");
     } catch (error) {

@@ -6,8 +6,11 @@ import { motion } from 'framer-motion';
 
 const MotionCol = motion(Col);
 
-function ProjectCard({ project, onClick }) {
-  const progress = Math.round((project.completedTasks / project.totalTasks) * 100);
+function ProjectCard({ project, onClick, canDelete, onDelete }) {
+  const progress = 
+    project.totalTasks > 0
+      ? Math.round((project.completedTasks / project.totalTasks) * 100)
+      : 0;
 
   const [show, setShow] = useState(false);
 
@@ -29,10 +32,15 @@ function ProjectCard({ project, onClick }) {
           }}>
             Cancel
           </Button>
-          <Button id = {styles["fst-button"]} variant="primary" onClick = {(e) => {
-            e.stopPropagation();
-            handleClose();
-          }}>
+          <Button
+            id={styles["fst-button"]}
+            variant="primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClose();
+              onDelete(project.id);
+            }}
+          > 
             <i>DELETE</i>
           </Button>
         </Modal.Footer>
@@ -41,12 +49,15 @@ function ProjectCard({ project, onClick }) {
         id={styles["project-card"]} className="rounded-4 p-4" onClick={onClick} role="button">
         <div className="d-flex justify-content-between">
           <CheckSquare size={50} color={project.color} />
-          {project.owner === 1 && (
-            <X size={25} color="#EF4444"
-            onClick = {(e) => {
-              e.stopPropagation();
-              handleShow();
-            }}
+          {canDelete && (
+            <X size={25}
+               color="#EF4444"
+               role="button"
+               style={{cursor: "pointer"}}
+               onClick={(e) => {
+                e.stopPropagation();
+                handleShow();
+               }}
             />
           )}
         </div>
@@ -78,7 +89,13 @@ function ProjectCard({ project, onClick }) {
           <span><Users size={16} className="me-1" />{project.numMembers}</span>
           <span>
             <Calendar size={16} className="me-1" />
-            {new Date(project.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            {project.dueDate ?
+                    project.dueDate.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                    : "Unspecified"}
           </span>
         </div>
       </MotionCol>

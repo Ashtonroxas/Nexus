@@ -5,7 +5,15 @@ import ProjectCard from "./components/ProjectCard/ProjectCard";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { ArrowUpDown } from "lucide-react";
 
-import { collection, onSnapshot, addDoc, serverTimestamp, doc, setDoc } from "firebase/firestore";
+import { 
+  collection,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+  doc,
+  setDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import db from "../../firebase/firebase";
 
 function MyProjects() {
@@ -30,9 +38,10 @@ function MyProjects() {
           completedTasks: data.completedTaskCount || 0,
           totalTasks: data.taskCount || 0,
           owner: data.ownerId || "",
-          dueDate: data.dueDate || null,
+          dueDate: data.dueDate?.toDate? data.dueDate.toDate() : null,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
           numMembers: data.memberCount || 1,
-          color: "#6366F1",
+          color: data.color || "#6366F1",
         };
       });
 
@@ -54,6 +63,7 @@ function MyProjects() {
         completedTaskCount: 0,
         dueDate: null,
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       await setDoc(doc(db, "projects", projectRef.id, "members", currentUserId), {
@@ -67,9 +77,27 @@ function MyProjects() {
     }
   };
 
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await deleteDoc(doc(db, "projects", projectId));
+    } catch (error) {
+      console.error("Error deleting project: ", error);
+    }
+  };
+
   const sortedProjects = [...projects].sort((a, b) => {
-    if (sortBy === "dueDate") return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
-    if (sortBy === "recent") return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+    if (sortBy === "dueDate") {
+      return (
+        (a.dueDate ? a.dueDate.getTime() : Infinity) - 
+        (b.dueDate ? b.dueDate.getTime() : Infinity)
+      );
+    }
+    if (sortBy === "recent") {
+      return (
+        (b.updatedAt?.getTime?.() || 0) -
+        (a.updatedAt?.getTime?.() || 0)
+      );
+    }
     if (sortBy === "progress") return (b.completedTasks / (b.totalTasks || 1)) - (a.completedTasks / (a.totalTasks || 1));
     return 0;
   });
@@ -111,7 +139,7 @@ function MyProjects() {
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 <Dropdown.Item onClick={() => setSortBy("recent")} active={sortBy === "recent"}>
-                  Recently Added
+                  Recently Edited
                 </Dropdown.Item>
                 <Dropdown.Item onClick={() => setSortBy("dueDate")} active={sortBy === "dueDate"}>
                   Approaching Deadline
@@ -130,13 +158,20 @@ function MyProjects() {
         </Col>
       </Row>
       <Row className="p-3 gap-3 justify-content-evenly order-3">
-        {sortedProjects.map((project) => (
-          <ProjectCard 
-            key={project.id}
-            project={project}
-            onClick={() => navigate(`/projects/${project.id}`)}
-          />
-        ))}
+        {sortedProjects.map((project) => {
+          const currentUserId = "user123";
+          const canDelete = project.owner === currentUserId;
+
+          return (
+            <ProjectCard 
+              key={project.id}
+              project={project}
+              onClick={() => navigate(`/projects/${project.id}`)}
+              canDelete={canDelete}
+              onDelete={handleDeleteProject}
+            />
+          );
+        })}
       </Row>
     </div>
   );
