@@ -57,7 +57,7 @@ function ProfilePage() {
 
     return (
         <div className={styles.page}>
-            <div className={styles.mobileRow}>
+            <div className={`${styles.mobileRow} d-flex d-lg-none`}>
                 {menuButton}
                 <Button variant="link" className={styles.mobileSignOut}>
                     Sign Out
@@ -90,7 +90,7 @@ function ProfilePage() {
                                 </div>
                             </div>
                             
-                            <Button variant="link" className={styles.desktopSignOut}>
+                            <Button variant="link" className={`${styles.desktopSignOut} d-none d-lg-inline`}>
                                 Sign Out
                             </Button>
                         </div>
