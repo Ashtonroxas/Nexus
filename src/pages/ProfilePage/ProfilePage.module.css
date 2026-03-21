@@ -12,15 +12,15 @@
 
 .mobileSignOut,
 .desktopSignOut {
-    color: var(--default-red);
-    text-decoration: none;
+    color: var(--default-red) !important;
+    text-decoration: none !important;
     font-weight: 700;
     padding: 0;
 }
 
 .mobileSignOut:hover,
 .desktopSignOut:hover {
-    color: var(--hover-red);
+    color: var(--hover-red) !important;
 }
 
 .profileCard,
