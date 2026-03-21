@@ -17,7 +17,7 @@ function ProjectCard({ project, onClick }) {
 
   return (
     <>
-      <Modal id = {styles["delete-warning"]} show={show} onHide={handleClose}>
+      <Modal dialogClassName={styles.deleteWarning} show={show} onHide={handleClose} centered>
         <Modal.Header className = "gap-2 border-0">
           <Modal.Title id = {styles["del-title"]}>Delete Project?</Modal.Title>
         </Modal.Header>
