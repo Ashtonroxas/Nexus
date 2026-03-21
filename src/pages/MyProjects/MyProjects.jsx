@@ -5,83 +5,72 @@ import ProjectCard from "./components/ProjectCard/ProjectCard";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { ArrowUpDown } from "lucide-react";
 
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, serverTimestamp, doc, setDoc } from "firebase/firestore";
 import db from "../../firebase/firebase";
 
 function MyProjects() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const numProjects = 4; // Placeholder for the number of projects
+  const [projects, setProjects] = useState([]);
+  const numProjects = projects.length; // Placeholder for the number of projects
   const [sortBy, setSortBy] = useState("recent");
   const { menuButton } = useOutletContext();
 
-  // Begin firebase testing
-   const [projects, setProjects] = useState([]);
+  useEffect(() => {
+    const projectCollection = collection(db, "projects");
 
-   useEffect(() => {
-    const projCollection = collection(db, "projects");
-    const unsubscribe = onSnapshot(projCollection, (snapshot) => {
+    const unsubscribe = onSnapshot(projectCollection, (snapshot) => {
       const projectsArr = snapshot.docs.map((doc) => {
         const data = doc.data();
 
         return {
-        id: doc.id,
-        name: data.name,
-        description: data.description,
-        completedTasks: data.completedTaskCount,
-        totalTasks: data.taskCount,
-        owner: data.ownerId,
-        }
+          id: doc.id,
+          name: data.name || "Untitled Project",
+          description: data.description || "",
+          completedTasks: data.completedTaskCount || 0,
+          totalTasks: data.taskCount || 0,
+          owner: data.ownerId || "",
+          dueDate: data.dueDate || null,
+          numMembers: data.memberCount || 1,
+          color: "#6366F1",
+        };
       });
 
       setProjects(projectsArr);
-      console.log(projectsArr);
     });
 
     return () => unsubscribe();
-   }, []);
-  // End firebase testing
+  }, []);
 
-  const dummyProject = [
-    {
-      id: 1,
-      name: 'Website Redesign',
-      description: 'Complete overhaul of website with new branding',
-      totalTasks: 4,
-      completedTasks: 1,
-      dueDate: '2026-03-31',
-      numMembers: 6,
-      color: '#6366F1',
-      owner: 1,
-    },
-    {
-      id: 2,
-      name: 'Mobile App Launch',
-      description: 'iOS and Android app launch for customer sign in portal',
-      totalTasks: 52,
-      completedTasks: 18,
-      dueDate: '2026-04-30',
-      numMembers: 8,
-      color: '#E25C3A',
-      owner: 0,
-    },
-    {
-      id: 3,
-      name: 'Marketing Campaign',
-      description: 'Q1 2026 marketing campaign across all media channels',
-      totalTasks: 38,
-      completedTasks: 31,
-      dueDate: '2026-02-28',
-      numMembers: 5,
-      color: '#10B981',
-      owner: 0,
-    },
-  ];
+  const handleNewProject = async () => {
+    try {
+      const currentUserId = "user123";
 
-  const sortedProjects = [...dummyProject].sort((a, b) => {
-    if (sortBy === "dueDate") return new Date(a.dueDate) - new Date(b.dueDate);
-    if (sortBy === "recent") return a.id - b.id;
-    if (sortBy === "progress") return (b.completedTasks / b.totalTasks) - (a.completedTasks / a.totalTasks);
+      const projectRef = await addDoc(collection(db, "projects"), {
+        name: "Untitled Project",
+        description: "",
+        ownerId: currentUserId,
+        taskCount: 0,
+        completedTaskCount: 0,
+        dueDate: null,
+        createdAt: serverTimestamp(),
+      });
+
+      await setDoc(doc(db, "projects", projectRef.id, "members", currentUserId), {
+        userId: currentUserId,
+        role: "owner",
+      });
+
+      navigate(`/projects/${projectRef.id}`);
+    } catch (error) {
+      console.error("Error creating project: ", error);
+    }
+  };
+
+  const sortedProjects = [...projects].sort((a, b) => {
+    if (sortBy === "dueDate") return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
+    if (sortBy === "recent") return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+    if (sortBy === "progress") return (b.completedTasks / (b.totalTasks || 1)) - (a.completedTasks / (a.totalTasks || 1));
     return 0;
   });
 
@@ -133,17 +122,19 @@ function MyProjects() {
               </Dropdown.Menu>
             </Dropdown>
           </div>
-          <Button id={styles["new-project"]} size="lg">
+          <Button id={styles["new-project"]} 
+                  size="lg"
+                  onClick={handleNewProject}>
             + New Project
           </Button>
         </Col>
       </Row>
-      <Row className="p-3 gap-3 justify-content-center order-3">
+      <Row className="p-3 gap-3 justify-content-evenly order-3">
         {sortedProjects.map((project) => (
           <ProjectCard 
             key={project.id}
             project={project}
-            onClick={() => navigate(`/projects/abc123`)}
+            onClick={() => navigate(`/projects/${project.id}`)}
           />
         ))}
       </Row>

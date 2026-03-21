@@ -23,10 +23,11 @@
 }
 
 .hamburger {
-    border: 1px solid #CCCCCC;
+    border: 4px solid #CCCCCC;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background: none !important;
 }
 
 .offcanvas {
