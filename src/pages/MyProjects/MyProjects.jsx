@@ -14,7 +14,7 @@ import {
   setDoc,
   deleteDoc,
 } from "firebase/firestore";
-import db from "../../firebase/firebase";
+import { db } from "../../firebase/firebase";
 
 function MyProjects() {
   const navigate = useNavigate();

@@ -16,7 +16,7 @@ import { HexColorPicker } from 'react-colorful';
 import '@xyflow/react/dist/style.css';
 import { useOutletContext, useParams } from "react-router-dom";
 import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
-import db from "../../firebase/firebase";
+import { db } from "../../firebase/firebase";
 import styles from './DependencyGraph.module.css';
 
 // Updated TextUpdaterNode 
