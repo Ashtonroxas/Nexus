@@ -6,84 +6,46 @@ import {
   useNodesState, 
   useEdgesState, 
   addEdge,
-  MiniMap, 
-  MarkerType,
-  Handle,        
-  Position,      
-  useReactFlow   
+  MiniMap,  
 } from '@xyflow/react';
 import { HexColorPicker } from 'react-colorful';
 import '@xyflow/react/dist/style.css';
 import { useOutletContext, useParams } from "react-router-dom";
 import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
+import TaskNode from './components/TaskNode/TaskNode';
 import styles from './DependencyGraph.module.css';
 
-// Updated TextUpdaterNode 
-export function TextUpdaterNode({ id, data }) {
-  const { updateNodeData } = useReactFlow();
-
-  const onChange = useCallback((evt) => {
-    updateNodeData(id, { label: evt.target.value });
-  }, [id, updateNodeData]);
-
-  return (
-    <div 
-      className="text-updater-node" 
-      style={{ 
-        background: '#fff', 
-        border: '1px solid #232323',
-        borderRadius: '8px', 
-        minWidth: '120px',
-        padding: '12px 10px', 
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
-      
-      <input 
-        id={`text-${id}`} 
-        name="text" 
-        value={data.label} 
-        onChange={onChange} 
-        className="nodrag" 
-        style={{ 
-          width: '100%', 
-          padding: '0',          // Removed padding so only the text area is the input
-          border: 'none',        
-          outline: 'none',       
-          background: 'transparent',
-          textAlign: 'center',
-          fontWeight: 'bold',
-          color: '#333'
-        }}
-      />
-
-      <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
-    </div>
-  );
-}
-
-const nodeTypes = { textUpdater: TextUpdaterNode };
+const nodeTypes = { 
+  taskNode: TaskNode,
+};
 
 const initialNodes = [
-  { 
-    id: '1', 
-    type: 'textUpdater', 
-    position: { x: 100, y: 100 }, 
-    data: { label: 'Task 1' },
-    sourcePosition: 'right', 
-    targetPosition: 'left'   
+  {
+    id: "1",
+    type: "taskNode",
+    position: { x: 100, y: 100 },
+    data: {
+      taskCode: "TASK-101",
+      title: "Generate Design Prototype",
+      status: "To Do",
+      complexity: "Low",
+      dueDate: "Feb 15",
+      assigneeInitials: "AB",
+    },
   },
-  { 
-    id: '2', 
-    type: 'textUpdater', 
-    position: { x: 400, y: 200 }, 
-    data: { label: 'Task 2' },
-    sourcePosition: 'right',
-    targetPosition: 'left'
+  {
+    id: "2",
+    type: "taskNode",
+    position: { x: 420, y: 180 },
+    data: {
+      taskCode: "TASK-102",
+      title: "API Integration Layer",
+      status: "In Progress",
+      complexity: "High",
+      dueDate: "Feb 18",
+      assigneeInitials: "AB",
+    },
   },
 ];
 
@@ -202,17 +164,23 @@ export default function DependencyGraph() {
 
   //Function to generate and add a new node
   const handleAddNode = () => {
-    const newNodeId = `Task-${Math.random().toString(36).substring(7)}`;
+    const newNodeId = `Task-${Date.now()}`;
+
     const newNode = {
       id: newNodeId,
-      type: 'textUpdater', 
+      type: 'taskNode', 
       position: { 
-        x: Math.random() * 200 + 100, 
-        y: Math.random() * 200 + 100 
+        x: Math.random() * 250 + 120, 
+        y: Math.random() * 250 + 120 
       }, 
-      data: { label: `Task ${nodes.length + 1}` },
-      sourcePosition: 'right', 
-      targetPosition: 'left'   
+      data: { 
+        taskCode: `TASK-${nodes.length + 101}`,
+        title: `New Task ${nodes.length + 1}`,
+        status: "To Do",
+        complexity: "Low",
+        dueDate: "N/A",
+        assigneeInitials: "N/A", 
+      },
     };
     
     setNodes((nds) => [...nds, newNode]);
@@ -337,11 +305,11 @@ export default function DependencyGraph() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          fitView
+          defaultViewport={{x: 0, y: 0, zoom: 0.7}}
         >
           <Background variant="dots" gap={20} size={1} />
           <Controls />
-          <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.1)" /> 
+          <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.1)" />
         </ReactFlow>
       </div>
 

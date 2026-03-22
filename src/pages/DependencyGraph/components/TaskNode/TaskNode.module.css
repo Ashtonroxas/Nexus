@@ -1,0 +1,155 @@
+:root {
+  --tasknode-shadow: #1018280F;
+  --selected-tasknode-shadow: #6366F1;
+  --severe-background: #FFAAA780;
+  --severe-color: #FD4D4D;
+  --high-background: #FFC48D80;
+  --high-color: #D97706;
+  --medium-background: #FEF3C780;
+  --medium-color: #F6AB29;
+  --low-background:#B2F0C380;
+  --low-color:#5CBD7F;
+  --todo-color: #6F7371;
+  --inprogress-color: #282DAF;
+  --done-color: #28AF60;
+  --info-text-color: #4B5563
+}
+
+.taskNode {
+  background: #FFFFFF;
+  border: 1px solid var(--stroke-faded);
+  border-radius: 16px;
+  min-width: 300px;
+  max-width: 300px;
+  height: auto;
+  min-height: 12rem;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px var(--tasknode-shadow);
+  position: relative;
+  font-family: inherit;
+}
+
+.taskNodeSelected {
+  box-shadow: 0 0 0 2px var(--selected-tasknode-shadow);
+}
+
+.handle {
+  width: 10px;
+  height: 10px;
+  background: var(--stroke-solid);
+  border: 2px solid #FFFFFF;
+}
+
+.taskCodeRow {
+  margin-bottom: 8px;
+}
+
+.taskCode {
+  font-size: 12px;
+  color: var(--stroke-solid);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.taskTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.severeBadge {
+  background: var(--severe-background);
+  color: var(--severe-color);
+}
+
+.highBadge {
+  background: var(--high-background);
+  color: var(--high-color);
+}
+
+.mediumBadge {
+  background: var(--medium-background);
+  color: var(--medium-color);
+}
+
+.lowBadge {
+  background: var(--low-background);
+  color: var(--low-color);
+}
+
+.dueDate {
+  font-size: 14px;
+  color: var(--stroke-solid);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bottomRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statusWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.statusTodo {
+  background: var(--todo-color);
+}
+
+.statusInProgress {
+  background: var(--inprogress-color);
+}
+
+.statusDone {
+  background: var(--done-color);
+}
+
+.statusText {
+  font-size: 16px;
+  color: var(--info-text-color);
+  font-weight: 500;
+}
+
+.assignee {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #DBE4FF;
+  color: #5B5BD6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}

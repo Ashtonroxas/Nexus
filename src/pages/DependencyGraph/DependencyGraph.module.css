@@ -13,7 +13,8 @@
 }
 
 .blueprintHeader {
-  padding: 1.5rem;
+  height: fit-content;
+  padding: 0.5rem 1.5rem;
   border-bottom: 1px solid var(--outlines);
   background-color: var(--background);
 }
