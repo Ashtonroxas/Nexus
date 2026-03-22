@@ -7,6 +7,7 @@ import {
   useEdgesState, 
   addEdge,
   MiniMap,  
+  MarkerType,
 } from '@xyflow/react';
 import { HexColorPicker } from 'react-colorful';
 import '@xyflow/react/dist/style.css';
@@ -14,6 +15,7 @@ import { useOutletContext, useParams } from "react-router-dom";
 import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import TaskNode from './components/TaskNode/TaskNode';
+import CreateTaskModal from './components/CreateTaskModal/CreateTaskModal';
 import styles from './DependencyGraph.module.css';
 
 const nodeTypes = { 
@@ -54,7 +56,16 @@ const initialEdges = [
     id: 'e1-2', 
     source: '1', 
     target: '2', 
-    animated: true, 
+    animated: false, 
+
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+    },
+
+    style: {
+      stroke: "#6B7280",
+      strokeWidth: 2,
+    },
   },
 ];
 
@@ -74,6 +85,8 @@ export default function DependencyGraph() {
   const [hasLoadedProject, setHasLoadedProject] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const pickerRef = useRef(null);
+
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -116,8 +129,21 @@ export default function DependencyGraph() {
     (params) => {
       const newEdge = {
         ...params,
+        id: `edge-${params.source}-${params.target}`,
         animated: true,
+
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+        },
+
+        style: {
+          stroke: "#6B7280",
+          strokeWidth: 2,
+        },
       };
+
       setEdges((eds) => addEdge(newEdge, eds));
     },
     [setEdges],
@@ -162,30 +188,45 @@ export default function DependencyGraph() {
     return () => clearTimeout(timeout);
   }, [projectName, projectDescription, projectColor]);
 
-  //Function to generate and add a new node
-  const handleAddNode = () => {
-    const newNodeId = `Task-${Date.now()}`;
+  const handleOpenCreateTask = () => {
+    setShowCreateTaskModal(true);
+  };
 
+  const handleCreateTask = (taskFormData) => {
+    const newNodeId = `task-${Date.now()}`;
+    const assigneeName = taskFormData.assignee?.trim() || "N/A";
+
+    const assigneeInitials =
+      assigneeName !== "N/A"
+        ? assigneeName
+            .split(" ")
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((i) => i[0].toUpperCase())
+            .join("")
+        : "--";
     const newNode = {
       id: newNodeId,
-      type: 'taskNode', 
-      position: { 
-        x: Math.random() * 250 + 120, 
-        y: Math.random() * 250 + 120 
-      }, 
-      data: { 
+      type: "taskNode",
+      position: {
+        x: Math.random() * 250 + 120,
+        y: Math.random() * 250 + 120,
+      },
+      data: {
         taskCode: `TASK-${nodes.length + 101}`,
-        title: `New Task ${nodes.length + 1}`,
-        status: "To Do",
-        complexity: "Low",
-        dueDate: "N/A",
-        assigneeInitials: "N/A", 
+        title: taskFormData.title,
+        description: taskFormData.description,
+        assigneeName,
+        assigneeInitials,
+        status: taskFormData.status,
+        complexity: taskFormData.complexity,
+        dueDate: taskFormData.dueDate,        
       },
     };
-    
+      
     setNodes((nds) => [...nds, newNode]);
-  };
-    
+  }
+
   return (
     <div className={styles.blueprintContainer}>
       <div className={styles.blueprintHeader}>
@@ -292,7 +333,7 @@ export default function DependencyGraph() {
           <button 
             className="btn btn-primary btn-sm" 
             style={{ backgroundColor: '#6366F1', border: 'none' }}
-            onClick={handleAddNode}
+            onClick={handleOpenCreateTask}
           >
             + Add Task
           </button>
@@ -311,8 +352,12 @@ export default function DependencyGraph() {
           <Controls />
           <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.1)" />
         </ReactFlow>
-      </div>
 
+        <CreateTaskModal
+          isOpen={showCreateTaskModal}
+          onClose={() => setShowCreateTaskModal(false)}
+          onCreateTask={handleCreateTask} />
+      </div>
     </div>
   );
 }

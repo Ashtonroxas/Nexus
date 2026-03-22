@@ -13,6 +13,17 @@ function TaskNode({ data, selected }) {
     assigneeInitials = "N/A",
   } = data || {};
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+    const month = date.toLocaleDateString("en-US", { month: "short" });
+    const day = date.getDate();
+    const year = String(date.getFullYear()).slice(-2);
+
+    return `${month} ${day}, ${year}`;
+  };
+
   return (
     <div className={`${styles.taskNode} ${selected ? styles.taskNodeSelected : ""}`}>
       <Handle
@@ -36,7 +47,7 @@ function TaskNode({ data, selected }) {
 
         <span className={styles.dueDate}>
           <Calendar size={16} className="me-1" />
-          {dueDate}
+          {formatDate(dueDate)}
         </span>
       </div>
 
