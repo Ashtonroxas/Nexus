@@ -3,12 +3,19 @@ import MyProjects from './pages/MyProjects/MyProjects';
 import NexusLayout from './layouts/NexusLayout';
 import DependencyGraph from './pages/DependencyGraph/DependencyGraph';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
+import AuthPage from './pages/Auth/AuthPage';
+import ProtectedRoute from './components/Sidebar/ProtectedRoute';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route element={<NexusLayout />}>
+        <Route path="/login" element={<AuthPage />} />
+        <Route 
+          element={
+            <ProtectedRoute>
+              <NexusLayout />
+            </ProtectedRoute>}>
           {/* Main Pages */}
           <Route path="/" element={<Navigate to="/projects" replace />} />
           <Route path="/projects" element={<MyProjects />} />
