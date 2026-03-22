@@ -1,6 +1,8 @@
 import { Link, NavLink, useLocation, useParams } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, ChevronUp, User, LogOut } from 'lucide-react';
+import { signOut } from "firebase/auth";
+import { auth } from "../../firebase/firebase";
 import styles from "./Sidebar.module.css";
 import logo from "../../assets/nexus.png";
 import testavatarimage from "../../assets/test-avatar.png";
@@ -13,6 +15,10 @@ function Sidebar({ variant = "desktop", onNavigate }) {
 
   const projectSidebar = pathname.startsWith("/projects/") && !!projectId;
   const wrapperStyling = `${styles.sidebar} p-3 h-100`
+
+  const handleLogout = async () => {
+    await signOut(auth);
+  }
 
   const handleNav = () => {
     if (onNavigate) onNavigate();
@@ -140,7 +146,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                   className={styles.accountMenuItem}
                   onClick={() => {
                     setShowAccountMenu(false);
-                    handleNav();
+                    handleLogout();
                   }}
                 >
                   <LogOut size={16} />

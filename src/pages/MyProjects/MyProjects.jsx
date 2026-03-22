@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../firebase/AuthContext";
 import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import styles from "./MyProjects.module.css";
 import ProjectCard from "./components/ProjectCard/ProjectCard";
@@ -13,8 +14,10 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  query,
+  where,
 } from "firebase/firestore";
-import db from "../../firebase/firebase";
+import { db } from "../../firebase/firebase";
 
 function MyProjects() {
   const navigate = useNavigate();
@@ -23,11 +26,16 @@ function MyProjects() {
   const numProjects = projects.length; // Placeholder for the number of projects
   const [sortBy, setSortBy] = useState("recent");
   const { menuButton } = useOutletContext();
-
+  const { currentUser } = useAuth();
   useEffect(() => {
-    const projectCollection = collection(db, "projects");
+    if (!currentUser) return;
 
-    const unsubscribe = onSnapshot(projectCollection, (snapshot) => {
+    const q = query(
+      collection(db, "projects"),
+      where("ownerId", "==", currentUser.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const projectsArr = snapshot.docs.map((doc) => {
         const data = doc.data();
 
@@ -53,7 +61,9 @@ function MyProjects() {
 
   const handleNewProject = async () => {
     try {
-      const currentUserId = "user123";
+      if (!currentUser) return;
+
+      const currentUserId = currentUser?.uid;
 
       const projectRef = await addDoc(collection(db, "projects"), {
         name: "Untitled Project",
@@ -159,7 +169,7 @@ function MyProjects() {
       </Row>
       <Row className="p-3 gap-3 justify-content-evenly order-3">
         {sortedProjects.map((project) => {
-          const currentUserId = "user123";
+          const currentUserId = currentUser?.uid;
           const canDelete = project.owner === currentUserId;
 
           return (
