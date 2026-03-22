@@ -1,0 +1,276 @@
+/* DRAWER LAYOUT & ANIMATION */
+
+/* The main sidebar container. Hidden off-screen to the right by default. */
+.drawerOverlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 340px; 
+  background: #FFFFFF;
+  border-left: 1px solid #E0E0E0;
+  box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1);
+  
+  /* The drawerOpen class brings it back to 0 */
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* Toggled via React state to slide the drawer into view */
+.drawerOpen {
+  transform: translateX(0);
+}
+
+/* Inner content area with scrolling enabled if content gets too long */
+.tdContent {
+  padding: 24px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* TYPOGRAPHY & BASIC ELEMENTS */
+
+.tdHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.tdEyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #666666;
+}
+
+/* The 'X' close button */
+.tdCloseBtn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+/* Replaced the static title with an editable input field */
+.tdTitleInput {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  border-bottom: 1px dashed transparent;
+  padding-bottom: 2px;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+/* Reusable text utility classes */
+.tdText { font-size: 14px; color: #444444; line-height: 1.5; margin: 0; }
+.tdTextBold { font-weight: 600; color: #222; }
+.tdTextMuted { color: #888; }
+.tdTextItalic { font-style: italic; }
+
+.tdSection { margin-bottom: 24px; }
+.tdBorderTop { border-top: 1px solid #EAEAEA; padding-top: 24px; }
+
+.tdSectionLabel {
+  font-size: 11px;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+/* INTERACTIVE DROPDOWNS (STATUS & COMPLEXITY)*/
+
+/* Shared logic for the Status and Complexity <select> dropdowns.*/
+.tdStatus, .tdBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  /* Custom SVG Arrow */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Status specific sizing */
+.tdStatus {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  background-position: right 12px center;
+  background-size: 14px;
+  padding-right: 36px;
+}
+
+/* Complexity specific sizing */
+.tdBadge {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background-color: #FFFFFF;
+  background-position: right 10px center;
+  background-size: 12px;
+  padding-right: 32px; 
+}
+
+/* Dynamic Colors hooked into index.css global variables */
+.tdStatusDone { background-color: var(--green-status-bg); color: var(--green-status-font); }
+.tdStatusProgress { background-color: #EEF2FF; color: var(--accent-button-bg); }
+.tdStatusTodo { background-color: #F3F4F6; color: var(--stroke-solid); }
+
+.tdBadgeLow { color: var(--green-status-font); border: 1px solid var(--green-status-font); }
+.tdBadgeMedium { color: var(--yellow-status-font); border: 1px solid var(--yellow-status-font); }
+.tdBadgeHigh { color: var(--orange-status-font); border: 1px solid var(--orange-status-font); }
+.tdBadgeSevere { color: var(--red-status-font); border: 1px solid var(--red-status-font); }
+
+
+/* METADATA GRID (Assignee, Date, ID)*/
+
+.tdGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.tdUser, .tdDate {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #222;
+}
+
+.tdAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: white;
+  margin-right: 8px;
+  font-weight: 700;
+}
+
+.tdAvatarPurple { background-color: var(--accent-button-bg); }
+
+/* Native HTML Date Picker reset to look like clean text */
+.tdDateInput {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #222;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+}
+
+
+/* DEPENDENCY MAP LISTS */
+
+.tdDependencyRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mt4 { margin-top: 16px; }
+
+/* The little gray circle showing how many dependencies exist */
+.tdCount {
+  background-color: #F5F5F5;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tdDependencyList {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0 0;
+}
+
+.tdDependencyList li {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 0;
+}
+
+/* Colored status dots next to dependency names */
+.dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+.dotOrange { background-color: var(--orange-status-font); }
+.dotBlue { background-color: var(--accent-button-bg); }
+
+.tdStatusSmall {
+  margin-left: auto;
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+}
+
+/* Select dropdown to ADD a new dependency */
+.addDepSelect {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  border: 1px dashed #E0E0E0;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #666;
+  background: #fafafa;
+  cursor: pointer;
+  outline: none;
+}
+
+.addDepSelect:hover {
+  border-color: #9CA3AF;
+}
+
+/* The 'x' button to REMOVE a dependency */
+.removeDepBtn {
+  background: transparent;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+  margin-left: 8px;
+  border-radius: 4px;
+}
+
+.removeDepBtn:hover {
+  color: var(--red-status-font);
+  background: var(--red-status-bg);
+}
