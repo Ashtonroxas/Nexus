@@ -2,19 +2,49 @@ import { Link, NavLink, useLocation, useParams } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, ChevronUp, User, LogOut } from 'lucide-react';
 import { signOut } from "firebase/auth";
-import { auth } from "../../firebase/firebase";
+import { auth, db } from "../../firebase/firebase";
+import { doc, getDoc } from "firebase/firestore"; 
+import { useAuth } from "../../firebase/AuthContext";
 import styles from "./Sidebar.module.css";
 import logo from "../../assets/nexus.png";
-import testavatarimage from "../../assets/test-avatar.png";
+import defaultimg from "../../assets/default-img.png";
 
 function Sidebar({ variant = "desktop", onNavigate }) {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const { pathname } = useLocation();
   const { projectId} = useParams();
+  const { currentUser } = useAuth();
+  const [sidebarUser, setSidebarUser] = useState({
+    displayName: "User",
+    imgURL: defaultimg,
+  });
   const accountRef = useRef(null);
-
   const projectSidebar = pathname.startsWith("/projects/") && !!projectId;
   const wrapperStyling = `${styles.sidebar} p-3 h-100`
+
+  useEffect(() => {
+    const loadSidebarUser = async () => {
+      if (!currentUser) return;
+
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnapshot = await getDoc(userRef);
+
+        if (!userSnapshot.exists()) return;
+
+        const data = userSnapshot.data();
+
+        setSidebarUser({
+          displayName: data.displayName || currentUser.displayName || "User",
+          imgURL: data.imgURL || defaultimg,
+        });
+      } catch (error) {
+        console.error("Error loading sidebar user: ", error);
+      }
+    };
+
+    loadSidebarUser();
+  }, [currentUser]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -114,10 +144,10 @@ function Sidebar({ variant = "desktop", onNavigate }) {
               onClick={() => setShowAccountMenu((prev) => !prev)}
             >
               <div className={styles.accountInfo}>
-                <img src={testavatarimage}
+                <img src={sidebarUser.imgURL}
                   alt="Profile Image"
                   className={styles.accountImage} />
-                <span className={styles.accountName}>John Doe</span>
+                <span className={styles.accountName}>{currentUser?.displayName || "User"}</span>
               </div>
 
               <ChevronUp size={18}

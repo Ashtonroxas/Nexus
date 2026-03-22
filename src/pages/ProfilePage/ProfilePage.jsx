@@ -15,8 +15,8 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebase";
 import { useAuth } from "../../firebase/AuthContext";
+import defaultimage from "../../assets/default-img.png";
 import styles from "./ProfilePage.module.css";
-import testavatarimg from "../../assets/test-avatar.png";
 
 function ProfilePage() {
   const { menuButton } = useOutletContext();
@@ -63,7 +63,7 @@ function ProfilePage() {
         const projectsSnapshot = await getDocs(projectsQ);
 
         const userInfo = {
-          img: data.imgURL || testavatarimg,
+          img: data.imgURL || defaultimage,
           firstName: data.firstName || "",
           lastName: data.lastName || "",
           email: data.email || currentUser.email || "",
