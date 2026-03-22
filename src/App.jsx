@@ -4,7 +4,7 @@ import NexusLayout from './layouts/NexusLayout';
 import DependencyGraph from './pages/DependencyGraph/DependencyGraph';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import AuthPage from './pages/Auth/AuthPage';
-import ProtectedRoute from './components/Sidebar/ProtectedRoute';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
