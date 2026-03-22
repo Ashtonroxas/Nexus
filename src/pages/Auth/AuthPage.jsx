@@ -12,6 +12,8 @@ function AuthPage() {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
+            console.log("HERE: ", user);
+
             const userRef = doc(db, "users", user.uid);
             const userSnapshot = await getDoc(userRef);
 
