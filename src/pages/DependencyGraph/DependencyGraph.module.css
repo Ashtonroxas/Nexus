@@ -1,27 +1,39 @@
+/* MAIN GRAPH CONTAINER & CANVAS */
+
+/* Outer wrapper. Gives the rounded edges(circular look)  */
 .blueprintContainer {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 2rem); 
-  background-color: #ffffff;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  background-color: #FDFDFF;
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+  border: 1px solid #E5E7EB;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.03);
   overflow: hidden;
+  position: relative;
 }
 
 .blueprintHeader {
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background-color: #f8f9fa;
+  border-bottom: 1px solid #E5E7EB;
+  background-color: white;
+  z-index: 10;
 }
 
+/*Subtle grid pattern. */
 .blueprintCanvas {
   flex-grow: 1;
   width: 100%;
   height: 100%;
   position: relative;
+  background-image: 
+    linear-gradient(to right, rgba(229, 231, 235, 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(229, 231, 235, 0.3) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
-/*floating action panel*/
+/* + Add Task button */
 .floatingToolbar {
   position: absolute;
   top: 20px;
@@ -30,8 +42,139 @@
   padding: 10px 15px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E5E7EB;
   z-index: 10;
+}
+
+/* NODE UI */
+
+/* The base styling for custom React Flow nodes */
+.taskCard {
+  width: 288px; 
+  background: white;
+  border: 1px solid #F3F4F6;
+  border-radius: 12px; 
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease; 
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+}
+
+.taskCard:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.cardHeader {
+  padding: 16px;
+  border-bottom: 1px solid #F9FAFB;
+}
+
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/*Title edits right on the canvas */
+.taskTitleInput {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827; 
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  padding: 0;
+  line-height: 1.3;
+}
+
+/* Circle showing completion status */
+.statusDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assigneeBlock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  background-color: var(--accent-button-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.assigneeName {
+  font-size: 12px;
+  font-weight: 500;
+  color: #4B5563; 
+}
+
+.dateBlock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6B7280; 
+  font-size: 12px;
+}
+
+.cardFooter {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Visual Complexity Badge on the card */
+.complexityTag {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  appearance: none;
+  outline: none;
+  cursor: default; 
+}
+
+/* Hooked index.css variables for theme consistency */
+.tagLow { background: var(--green-status-bg); color: var(--green-status-font); border-color: var(--green-status-font); }
+.tagMedium { background: var(--yellow-status-bg); color: var(--yellow-status-font); border-color: var(--yellow-status-font); }
+.tagHigh { background: var(--orange-status-bg); color: var(--orange-status-font); border-color: var(--orange-status-font); }
+.tagSevere { background: var(--red-status-bg); color: var(--red-status-font); border-color: var(--red-status-font); }
+
+.statusTodo { background-color: var(--stroke-solid); }       
+.statusProgress { background-color: var(--accent-button-bg); }   
+.statusDone { background-color: var(--green-status-font); }       
+
+/*RESPONSIVENESS*/
+
+@media (max-width: 768px) {
+  .floatingToolbar {
+    top: auto;
+    bottom: 20px;
+    right: 50%;
+    transform: translateX(50%);
+  }
 }
