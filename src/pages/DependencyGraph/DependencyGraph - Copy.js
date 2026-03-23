@@ -62,7 +62,7 @@ export default function DependencyGraph() {
       const tasksRef = collection(db, "projects", projectId, "tasks");
       const snapshot = await getDocs(tasksRef);
 
-      let maxNumber = 100;
+      const maxNumber = 100;
 
       snapshot.docs.forEach((taskDoc) => {
         const taskCode = taskDoc.data()?.taskCode || "";

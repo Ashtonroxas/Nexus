@@ -127,7 +127,7 @@ function getStatusClass(status) {
       return styles.statusInProgress;
     case "to do":
     default:
-      return styles.Todo;
+      return styles.statusTodo;
   }
 }
 
