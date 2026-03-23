@@ -135,7 +135,7 @@ export default function DependencyGraph() {
       try {
         await updateDoc(doc(db, "projects", projectId), {
           taskCount,
-          completedTaskCount: completedTasks,
+          completedTasks,
           updatedAt: serverTimestamp(),
         });
       } catch (error) {
@@ -205,7 +205,7 @@ export default function DependencyGraph() {
     });
 
     return () => unsubscribe();
-  }, [projectId, setNodes, handleDeleteTask, updateProjectDeadline, updateProjectTaskInfo]);
+  }, [projectId, setNodes, handleDeleteTask, updateProjectDeadline]);
 
   useEffect(() => {
     if (!projectId) return;
