@@ -1,9 +1,18 @@
-import React from "react";
 import { Handle, Position } from "@xyflow/react";
-import { Calendar } from "lucide-react";
+import { Calendar, X } from "lucide-react";
+import { useState } from "react";
+import ConfirmModal from "../../../../components/ConfirmModal/ConfirmModal";
 import styles from "./TaskNode.module.css";
 
-function TaskNode({ data, selected }) {
+function TaskNode({ id, data, selected }) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const handleShowDeleteModal = () => setShowDeleteModal(true);
+  const handleCloseDeleteModal = () => setShowDeleteModal(false);
+  const handleConfirmDelete = async () => {
+    await onDelete?.(id);
+    handleCloseDeleteModal();
+  }
+
   const {
     taskCode = "TASK-000",
     title = "Untitled Task",
@@ -11,6 +20,7 @@ function TaskNode({ data, selected }) {
     complexity = "Low",
     dueDate = "N/A",
     assigneeInitials = "N/A",
+    onDelete,
   } = data || {};
 
   const formatDate = (dateString) => {
@@ -25,6 +35,7 @@ function TaskNode({ data, selected }) {
   };
 
   return (
+    <>
     <div className={`${styles.taskNode} ${selected ? styles.taskNodeSelected : ""}`}>
       <Handle
         type="target"
@@ -34,6 +45,18 @@ function TaskNode({ data, selected }) {
 
       <div className={styles.taskCodeRow}>
         <span className={styles.taskCode}>{taskCode}</span>
+        
+        <X
+          size={20}
+          color="#6B7280"
+          role="button"
+          style={{ cursor: "pointer" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleShowDeleteModal();
+          }}
+        />
+
       </div>
 
       <div className={styles.taskTitle}>
@@ -68,6 +91,17 @@ function TaskNode({ data, selected }) {
         className={styles.handle}
       />
     </div>
+
+    <ConfirmModal
+          show={showDeleteModal}
+          onHide={handleCloseDeleteModal} 
+          onConfirm={handleConfirmDelete}
+          title="Delete task?"
+          message={`Are you sure you want to delete "${title}" and all its data?`}
+          confirmText="Delete"
+          cancelText="Cancel" />
+
+    </>
   );
 }
 

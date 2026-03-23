@@ -1,0 +1,45 @@
+.modalTitle {
+    color: #FF5C5C;
+    font-weight: 700;
+}
+
+.cancelButton {
+    background-color: #E0DEDE;
+    color: black;
+    border: none;
+}
+
+.confirmButton {
+    background-color: #FF5C5C;
+    color: white;
+    border: none;
+}
+
+.cancelButton,
+.cancelButton:hover,
+.cancelButton:focus,
+.cancelButton:active {
+  background-color: #e0dede !important;
+  color: black !important;
+}
+
+.confirmButton,
+.confirmButton:hover,
+.confirmButton:focus,
+.confirmButton:active {
+  background-color: #ff5c5c !important;
+}
+
+.modalRoot :global(.modal-header) {
+  border-bottom: none !important;
+}
+
+.modalRoot :global(.modal-footer) {
+  border-top: none !important;
+}
+
+@media (max-width: 576px) {
+  .modalRoot :global(.modal-dialog) {
+    max-width: calc(100vw - 1.5rem);
+  }
+}

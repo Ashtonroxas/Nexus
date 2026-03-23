@@ -8,6 +8,8 @@ import {
   addEdge,
   MiniMap,  
   MarkerType,
+  applyEdgeChanges,
+  applyNodeChanges,
 } from '@xyflow/react';
 import { HexColorPicker } from 'react-colorful';
 import '@xyflow/react/dist/style.css';
@@ -21,6 +23,9 @@ import {
   addDoc,
   query,
   orderBy,
+  deleteDoc,
+  setDoc,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import TaskNode from './components/TaskNode/TaskNode';
@@ -87,6 +92,35 @@ export default function DependencyGraph() {
     return () => unsubscribe();
   }, [projectId, hasLoadedProject]);
 
+  const handleDeleteTask = useCallback(
+    async (taskId) => {
+      if (!projectId || !taskId) return;
+
+      try {
+        const edgesRef = collection(db, "projects", projectId, "edges");
+        const edgeSnapshot = await getDocs(edgesRef);
+
+        const connectedEdges = edgeSnapshot.docs.filter((edgeDoc) => {
+          const data = edgeDoc.data();
+          return data.source === taskId || data.target === taskId;
+        });
+
+        await Promise.all(
+          connectedEdges.map((edgeDoc) => 
+            deleteDoc(doc(db, "projects", projectId, "edges", edgeDoc.id))
+        )
+      );
+
+      await deleteDoc(doc(db, "projects", projectId, "tasks", taskId));
+
+      setEdges((eds) => 
+        eds.filter((edge) => edge.source !== taskId && edge.target !== taskId));
+      setNodes((nds) => nds.filter((node) => node.id !== taskId));
+      } catch (error) {
+        console.error("Error deleting task and edges: ", error);
+      }
+    }, [projectId, setNodes, setEdges]);
+
   useEffect(() => {
     if (!projectId) return;
 
@@ -114,6 +148,7 @@ export default function DependencyGraph() {
             status: data.status || "To Do",
             complexity: data.complexity || "Low",
             dueDate: data.dueDate || "",
+            onDelete: handleDeleteTask,
           },
         };
       });
@@ -122,21 +157,58 @@ export default function DependencyGraph() {
     });
 
     return () => unsubscribe();
-  }, [projectId, setNodes]);
+  }, [projectId, setNodes, handleDeleteTask]);
+
+  useEffect(() => {
+    if (!projectId) return;
+
+    const edgesRef = collection(db, "projects", projectId, "edges");
+    const unsubscribe = onSnapshot(edgesRef, (snapshot) => {
+      const firestoreEdges = snapshot.docs.map((edgeDoc) => {
+        const data = edgeDoc.data();
+
+        return {
+          id: edgeDoc.id,
+          source: data.source,
+          target: data.target,
+          sourceHandle: data.sourceHandle || null,
+          targetHandle: data.targetHandle || null,
+          animated: false,
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+          },
+          style: {
+            stroke: "#6B7280",
+            strokeWidth: 2,
+          },
+        };
+      });
+
+      setEdges(firestoreEdges);
+    });
+
+    return () => unsubscribe();
+  }, [projectId, setEdges]);
 
   const onConnect = useCallback(
-    (params) => {
-      const newEdge = {
-        ...params,
-        id: `edge-${params.source}-${params.target}`,
-        animated: true,
+    async (params) => {
+      if (!projectId || !params.source || !params.target) return;
 
+      const edgeId = `edge-${params.source}-${params.target}`;
+      const newEdge = {
+        id: edgeId,
+        source: params.source,
+        target: params.target,
+        sourceHandle: params.sourceHandle,
+        targetHandle: params.targetHandle,
+        animated: false,
         markerEnd: {
           type: MarkerType.ArrowClosed,
           width: 20,
           height: 20,
         },
-
         style: {
           stroke: "#6B7280",
           strokeWidth: 2,
@@ -144,9 +216,21 @@ export default function DependencyGraph() {
       };
 
       setEdges((eds) => addEdge(newEdge, eds));
-    },
-    [setEdges],
-  );
+
+      try {
+        await setDoc(doc(db, "projects", projectId, "edges", edgeId), {
+          source: params.source,
+          target: params.target,
+          sourceHandle: params.sourceHandle,
+          targetHandle: params.targetHandle,
+          animated: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      } catch (error) {
+        console.error("Error saving edge: ", error);
+      }
+    }, [projectId, setEdges]);
 
   const handleSaveProjectDetails = async () => {
     if (!project) return;
@@ -190,6 +274,48 @@ export default function DependencyGraph() {
   const handleOpenCreateTask = () => {
     setShowCreateTaskModal(true);
   };
+
+  const handleNodesChange = useCallback(
+    async (changes) => {
+      setNodes((nds) => applyNodeChanges(changes, nds));
+
+      const positionChanges = changes.filter(
+        (change) => change.type === "position" &&
+                    change.position &&
+                    change.dragging === false
+      );
+
+      for (const change of positionChanges) {
+        try {
+          await updateDoc(doc(db, "projects", projectId, "tasks", change.id), {
+            position: {
+              x: change.position.x,
+              y: change.position.y,
+            },
+            updatedAt: serverTimestamp(),
+          });
+        } catch (error) {
+          console.error("Error saving node position: ", error);
+        }
+      }
+    }, [projectId, setNodes]);
+
+  const handleEdgesChange = useCallback(
+    async (changes) => {
+      setEdges((eds) => applyEdgeChanges(changes, eds));
+
+      const removedEdges = changes.filter(
+        (change) => change.type === "remove" && change.id
+      );
+
+      for (const edge of removedEdges) {
+        try {
+          await deleteDoc(doc(db, "projects", projectId, "edges", edge.id));
+        } catch (error) {
+          console.error("Error deleting edge: ", error);
+        }
+      }
+    }, [projectId, setEdges]);
 
   const handleCreateTask = async (taskFormData) => {
     if (!projectId) return;
@@ -346,8 +472,8 @@ export default function DependencyGraph() {
           nodes={nodes} 
           edges={edges}
           nodeTypes={nodeTypes} 
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onNodesChange={handleNodesChange}
+          onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           defaultViewport={{x: 0, y: 0, zoom: 0.7}}
         >

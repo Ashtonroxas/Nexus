@@ -1,8 +1,9 @@
-import { Col, ProgressBar, Button, Modal } from "react-bootstrap";
+import { Col, ProgressBar } from "react-bootstrap";
 import styles from "./ProjectCard.module.css";
 import { X, Users, Calendar, CheckSquare } from "lucide-react";
 import { useState } from "react";
 import { motion } from 'framer-motion';
+import ConfirmModal from "../../../../components/ConfirmModal/ConfirmModal";
 
 const MotionCol = motion(Col);
 
@@ -12,39 +13,18 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
       ? Math.round((project.completedTasks / project.totalTasks) * 100)
       : 0;
 
-  const [show, setShow] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  const handleCloseDeleteModal = () => setShowDeleteModal(false);
+  const handleShowDeleteModal = () => setShowDeleteModal(true);
 
+  const handleConfirmDelete = async () => {
+    await onDelete?.(project.id);
+    handleCloseDeleteModal();
+  };
 
   return (
     <>
-      <Modal dialogClassName={styles.deleteWarning} show={show} onHide={handleClose} centered>
-        <Modal.Header className = "gap-2 border-0">
-          <Modal.Title id = {styles["del-title"]}>Delete Project?</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this project for everyone? This action cannot be undone.</Modal.Body>
-        <Modal.Footer className="justify-content-center gap-2 border-0">
-          <Button id = {styles["snd-button"]} variant="secondary" onClick = {(e) => {
-            e.stopPropagation();
-            handleClose();
-          }}>
-            Cancel
-          </Button>
-          <Button
-            id={styles["fst-button"]}
-            variant="primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClose();
-              onDelete(project.id);
-            }}
-          > 
-            <i>DELETE</i>
-          </Button>
-        </Modal.Footer>
-      </Modal>
       <MotionCol layout transition = {{layout: {duration: 0.4, ease: "easeInOut"}}}
         id={styles["project-card"]} className="rounded-4 p-4" onClick={onClick} role="button">
         <div className="d-flex justify-content-between">
@@ -56,7 +36,7 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
                style={{cursor: "pointer"}}
                onClick={(e) => {
                 e.stopPropagation();
-                handleShow();
+                handleShowDeleteModal();
                }}
             />
           )}
@@ -99,6 +79,15 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
           </span>
         </div>
       </MotionCol>
+
+      <ConfirmModal
+        show={showDeleteModal}
+        onHide={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Delete Project?"
+        message={`Are you sure you want to delete "${project.name}" for everyone? This action is irreversible.`}
+        confirmText="Delete"
+        cancelText="Cancel"/>
     </>
   );
 }

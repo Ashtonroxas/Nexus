@@ -167,7 +167,7 @@ function MyProjects() {
           </Button>
         </Col>
       </Row>
-      <Row className="p-3 gap-3 justify-content-evenly order-3">
+      <Row className="p-3 gap-3 justify-content-evenly justify-content-md-start order-3">
         {sortedProjects.map((project) => {
           const currentUserId = currentUser?.uid;
           const canDelete = project.owner === currentUserId;

@@ -30,7 +30,6 @@ function AuthPage() {
           updatedAt: serverTimestamp(),
           lastLoginAt: serverTimestamp(),
 
-          profileCompleted: false,
           isActive: true,
         });
       } else {

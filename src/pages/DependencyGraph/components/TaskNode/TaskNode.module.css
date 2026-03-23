@@ -42,6 +42,9 @@
 
 .taskCodeRow {
   margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .taskCode {
@@ -121,6 +124,9 @@
   width: 10px;
   height: 10px;
   border-radius: 999px;
+  display: inline-block;
+  flex-shrink: 0;
+  margin-right: 7px;
 }
 
 .statusTodo {
