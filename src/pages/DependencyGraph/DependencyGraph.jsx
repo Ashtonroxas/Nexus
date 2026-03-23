@@ -12,7 +12,16 @@ import {
 import { HexColorPicker } from 'react-colorful';
 import '@xyflow/react/dist/style.css';
 import { useOutletContext, useParams } from "react-router-dom";
-import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
+import { 
+  doc,
+  onSnapshot, 
+  updateDoc, 
+  serverTimestamp,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+} from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import TaskNode from './components/TaskNode/TaskNode';
 import CreateTaskModal from './components/CreateTaskModal/CreateTaskModal';
@@ -22,56 +31,9 @@ const nodeTypes = {
   taskNode: TaskNode,
 };
 
-const initialNodes = [
-  {
-    id: "1",
-    type: "taskNode",
-    position: { x: 100, y: 100 },
-    data: {
-      taskCode: "TASK-101",
-      title: "Generate Design Prototype",
-      status: "To Do",
-      complexity: "Low",
-      dueDate: "Feb 15",
-      assigneeInitials: "AB",
-    },
-  },
-  {
-    id: "2",
-    type: "taskNode",
-    position: { x: 420, y: 180 },
-    data: {
-      taskCode: "TASK-102",
-      title: "API Integration Layer",
-      status: "In Progress",
-      complexity: "High",
-      dueDate: "Feb 18",
-      assigneeInitials: "AB",
-    },
-  },
-];
-
-const initialEdges = [
-  { 
-    id: 'e1-2', 
-    source: '1', 
-    target: '2', 
-    animated: false, 
-
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-    },
-
-    style: {
-      stroke: "#6B7280",
-      strokeWidth: 2,
-    },
-  },
-];
-
 export default function DependencyGraph() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   const { menuButton } = useOutletContext();
   const { projectId } = useParams();
@@ -124,6 +86,43 @@ export default function DependencyGraph() {
 
     return () => unsubscribe();
   }, [projectId, hasLoadedProject]);
+
+  useEffect(() => {
+    if (!projectId) return;
+
+    const tasksRef = collection(db, "projects", projectId, "tasks");
+    const tasksQuery = query(tasksRef, orderBy("createdAt", "asc"));
+
+    const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
+      const firestoreNodes = snapshot.docs.map((taskDoc, index) => {
+        const data = taskDoc.data();
+
+        return {
+          id: taskDoc.id,
+          type: "taskNode",
+          position: {
+            x: data.position?.x ?? 120 + index * 260,
+            y: data.position?.y ?? 140,
+          },
+
+          data: {
+            taskCode: data.taskCode || `TASK-${index + 101}`,
+            title: data.title || "Untitled Task",
+            description: data.description || "",
+            assigneeName: data.assigneeName || "Unassigned",
+            assigneeInitials: data.assigneeInitials || "--",
+            status: data.status || "To Do",
+            complexity: data.complexity || "Low",
+            dueDate: data.dueDate || "",
+          },
+        };
+      });
+
+      setNodes(firestoreNodes);
+    });
+
+    return () => unsubscribe();
+  }, [projectId, setNodes]);
 
   const onConnect = useCallback(
     (params) => {
@@ -192,12 +191,14 @@ export default function DependencyGraph() {
     setShowCreateTaskModal(true);
   };
 
-  const handleCreateTask = (taskFormData) => {
-    const newNodeId = `task-${Date.now()}`;
-    const assigneeName = taskFormData.assignee?.trim() || "N/A";
+  const handleCreateTask = async (taskFormData) => {
+    if (!projectId) return;
+
+    const taskRef = collection(db, "projects", projectId, "tasks");
+    const assigneeName = taskFormData.assignee?.trim() || "Unassigned";
 
     const assigneeInitials =
-      assigneeName !== "N/A"
+      assigneeName !== "Unassigned"
         ? assigneeName
             .split(" ")
             .filter(Boolean)
@@ -205,14 +206,9 @@ export default function DependencyGraph() {
             .map((i) => i[0].toUpperCase())
             .join("")
         : "--";
-    const newNode = {
-      id: newNodeId,
-      type: "taskNode",
-      position: {
-        x: Math.random() * 250 + 120,
-        y: Math.random() * 250 + 120,
-      },
-      data: {
+    
+    try {
+      await addDoc(taskRef, {
         taskCode: `TASK-${nodes.length + 101}`,
         title: taskFormData.title,
         description: taskFormData.description,
@@ -220,12 +216,19 @@ export default function DependencyGraph() {
         assigneeInitials,
         status: taskFormData.status,
         complexity: taskFormData.complexity,
-        dueDate: taskFormData.dueDate,        
-      },
-    };
-      
-    setNodes((nds) => [...nds, newNode]);
-  }
+        dueDate: taskFormData.dueDate,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+
+        position: {
+          x: 120 + nodes.length * 40,
+          y: 140 + nodes.length * 20,
+        },
+      }); 
+    } catch (error) {
+      console.error("Error creating task: ", error);
+    }
+  };
 
   return (
     <div className={styles.blueprintContainer}>
