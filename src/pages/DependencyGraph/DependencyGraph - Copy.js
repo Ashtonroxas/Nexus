@@ -267,29 +267,6 @@ export default function DependencyGraph() {
     });
   }, [selectedTaskId, nodes]);
 
-  const blockedByTasks = selectedTask ?
-    edges
-      .filter((edge) => edge.target === selectedTask.id)
-      .map((edge) => nodes.find((node) => node.id === edge.source))
-      .filter(Boolean)
-      .map((node) => ({
-        id: node.id,
-        taskCode: node.data.taskCode,
-        title: node.data.title,
-      }))
-    : [];
-  const blockingTasks = selectedTask ?
-      edges
-        .filter((edge) => edge.source === selectedTask.id)
-        .map((edge) => nodes.find((node) => node.id === edge.target))
-        .filter(Boolean)
-        .map((node) => ({
-          id: node.id,
-          taskCode: node.data.taskCode,
-          title: node.data.title,
-        }))
-    : [];
-
   useEffect(() => {
     if (!projectId) return;
 
@@ -488,31 +465,6 @@ export default function DependencyGraph() {
     }
   };
 
-  const handleUpdateTask = async (taskId, updates) => {
-    if (!projectId || !taskId) return;
-
-    const assigneeName = (updates.assigneeName ?? "").trim() || "Unassigned";
-    const assigneeInitials = assigneeName !== "Unassigned"
-      ? assigneeName
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((i) => i[0].toUpperCase())
-        .join("")
-      : "--";
-
-    try {
-      await updateDoc(doc(db, "projects", projectId, "tasks", taskId), {
-        ...updates,
-        assigneeName,
-        assigneeInitials,
-        updatedAt: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error("Error updating task: ", error);
-    }
-  };
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -665,12 +617,9 @@ export default function DependencyGraph() {
               className={styles.taskSidebarPanel}
               onClick={(e) => e.stopPropagation()}
             >
-              <TaskDetails
+              <TaskDetailsPanel
                 task={selectedTask}
                 onClose={() => setSelectedTaskId(null)}
-                onSave={handleUpdateTask}
-                blockedBy={blockedByTasks}
-                blocking={blockingTasks}
               />
             </aside>
           </div>
@@ -685,12 +634,9 @@ export default function DependencyGraph() {
               className={styles.bottomSheet}
               onClick={(e) => e.stopPropagation()}
             >
-              <TaskDetails
+              <TaskDetailsPanel
                 task={selectedTask}
                 onClose={() => setSelectedTaskId(null)}
-                onSave={handleUpdateTask}
-                blockedBy={blockedByTasks}
-                blocking={blockingTasks}
                 isMobile={true}
               />
             </div>
