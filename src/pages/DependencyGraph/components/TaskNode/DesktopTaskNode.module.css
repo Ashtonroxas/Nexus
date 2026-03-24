@@ -9,9 +9,7 @@
   --medium-color: #F6AB29;
   --low-background:#B2F0C380;
   --low-color:#5CBD7F;
-  --todo-color: #6F7371;
-  --inprogress-color: #282DAF;
-  --done-color: #28AF60;
+
   --info-text-color: #4B5563
 }
 
@@ -114,7 +112,7 @@
   align-items: center;
 }
 
-.statusWrap {
+.statusWrapper {
   display: flex;
   align-items: center;
   gap: 8px;

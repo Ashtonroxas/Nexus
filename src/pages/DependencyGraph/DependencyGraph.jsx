@@ -54,6 +54,9 @@ export default function DependencyGraph() {
   const pickerRef = useRef(null);
 
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   const generateNextTaskCode = async () => {
     if (!projectId) return "TASK-101";
@@ -208,13 +211,14 @@ export default function DependencyGraph() {
         return {
           id: taskDoc.id,
           type: "taskNode",
+          selected: taskDoc.id === selectedTaskId,
           position: {
             x: data.position?.x ?? 120 + index * 260,
             y: data.position?.y ?? 140,
           },
 
           data: {
-            taskCode: data.taskCode || `TASK-${index + 101}`,
+            taskCode: data.taskCode || `No Code`,
             title: data.title || "Untitled Task",
             description: data.description || "",
             assigneeName: data.assigneeName || "Unassigned",
@@ -223,6 +227,7 @@ export default function DependencyGraph() {
             complexity: data.complexity || "Low",
             dueDate: data.dueDate || "",
             onDelete: handleDeleteTask,
+            onSelect: () => setSelectedTaskId(taskDoc.id),
           },
         };
       });
@@ -233,7 +238,32 @@ export default function DependencyGraph() {
     });
 
     return () => unsubscribe();
-  }, [projectId, setNodes, handleDeleteTask, updateProjectDeadline, updateProjectTaskInfo]);
+  }, [projectId, 
+      setNodes, 
+      handleDeleteTask, 
+      updateProjectDeadline, 
+      updateProjectTaskInfo,
+      selectedTaskId
+    ]);
+
+  useEffect(() => {
+    if (!selectedTaskId) {
+      setSelectedTask(null);
+      return;
+    }
+
+    const matchedNode = nodes.find((node) => node.id === selectedTaskId);
+
+    if (!matchedNode) {
+      setSelectedTask(null);
+      return;
+    }
+
+    setSelectedTask({
+      id: matchedNode.id,
+      ...matchedNode.data,
+    });
+  }, [selectedTaskId, nodes]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -553,6 +583,12 @@ export default function DependencyGraph() {
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           defaultViewport={{x: 0, y: 0, zoom: 0.7}}
+          onNodeClick={(event, node) => {
+            setSelectedTaskId(node.id);
+          }}
+          onPaneClick={() => {
+            setSelectedTaskId(null);
+          }}
         >
           <Background variant="dots" gap={20} size={1} />
           <Controls />

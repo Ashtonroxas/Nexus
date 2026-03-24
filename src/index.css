@@ -17,4 +17,8 @@
 
   --accent-button-bg: #6366F1;
   --warning-bg: #F1636354;
+
+  --todo-color: #6F7371;
+  --inprogress-color: #282DAF;
+  --done-color: #28AF60;
 }
