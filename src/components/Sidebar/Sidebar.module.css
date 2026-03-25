@@ -167,3 +167,7 @@
     background: #f3f4f6;
     color: #111111;
 }
+
+.logoLink { 
+    text-decoration: none;
+}

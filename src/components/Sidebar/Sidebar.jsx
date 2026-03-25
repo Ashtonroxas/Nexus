@@ -72,8 +72,12 @@ function Sidebar({ variant = "desktop", onNavigate }) {
     <div className={wrapperStyling}>
       <div className={styles.sidebarMain}>
         <div className= {`${styles.header} py-0 mt-0`} >
-          <div className={styles.brand}>Nexus</div>
-          <img src={logo} alt="Nexus Logo" width="47px" />
+          <Link to="/projects" className={styles.logoLink}>
+            <div className={styles.brand}>Nexus</div>
+          </Link>
+          <Link to="/projects" className={styles.logoLink}>
+            <img src={logo} alt="Nexus Logo" width="47px" />
+          </Link>
         </div>
 
         <hr className={styles.separator} />
