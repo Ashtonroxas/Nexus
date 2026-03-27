@@ -5,6 +5,7 @@ import DependencyGraph from './pages/DependencyGraph/DependencyGraph';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import AuthPage from './pages/Auth/AuthPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import Team from './pages/Team/Team';
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function App() {
           {/* Project Pages */}
           <Route path="/projects/:projectId" element={<DependencyGraph />} />
           <Route path="/projects/:projectId/report" element={<div>Coming Soon</div>} />
-          <Route path="/projects/:projectId/team" element={<div>Coming Soon</div>} />
+          <Route path="/projects/:projectId/team" element={<Team />} />
 
         </Route>
       </Routes>

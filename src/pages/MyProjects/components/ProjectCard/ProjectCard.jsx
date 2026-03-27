@@ -5,7 +5,7 @@ import { useState } from "react";
 import { motion } from 'framer-motion';
 import ConfirmModal from "../../../../components/ConfirmModal/ConfirmModal";
 
-const MotionCol = motion(Col);
+const MotionCol = motion.create(Col);
 
 function ProjectCard({ project, onClick, canDelete, onDelete }) {
   const progress = 
