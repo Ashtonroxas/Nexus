@@ -1,16 +1,43 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../firebase/AuthContext";
 import { collection, onSnapshot, doc, getDoc, getDocs, query, where, setDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
-import { Form, Button } from "react-bootstrap";
+import { Form, Button, Modal } from "react-bootstrap";
+import styles from './Team.module.css';
+
+// Helper to generate initials from a display name
+const getInitials = (name) => {
+  if (!name) return "?";
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return name.substring(0, 2).toUpperCase();
+};
+
+// Helper to assign a color based on name
+const getAvatarColor = (name) => {
+  const colors = ['#91B7ED', '#A7F3D0', '#FCD34D', '#FCA5A5', '#C4B5FD'];
+  if (!name) return colors[0];
+  const charCode = name.charCodeAt(0) + (name.charCodeAt(name.length - 1) || 0);
+  return colors[charCode % colors.length];
+};
 
 function Team() {
   const { projectId } = useParams();
   const { currentUser } = useAuth();
+  
   const [members, setMembers] = useState([]);
   const [addMember, setAddMember] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
+  // Modal Handlers
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setAddMember(""); 
+  };
+  const handleShowModal = () => setShowModal(true);
+
+  // Fetch members from Firestore
   useEffect(() => {
     if (!currentUser || !projectId) return;
 
@@ -29,13 +56,9 @@ function Team() {
           return {
             userId,
             role,
-            displayName: userData.displayName || "",
-            firstName: userData.firstName || "",
-            lastName: userData.lastName || "",
+            displayName: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || "Unknown User",
             email: userData.email || "",
-            jobTitle: userData.jobTitle || "",
-            department: userData.department || "",
-            imgURL: userData.imgURL || "",
+            jobTitle: userData.jobTitle || "Team Member",
           };
         })
       );
@@ -46,43 +69,107 @@ function Team() {
     return () => unsubscribe();
   }, [projectId, currentUser]);
 
+  // Add new member logic
   const handleAddMember = async (e) => {
     e.preventDefault();
-    if (!addMember.trim()) return;
+    const emailToSearch = addMember.trim().toLowerCase(); 
+    if (!emailToSearch) return;
 
-    const usersQuery = query(collection(db, "users"), where("email", "==", addMember.trim()));
-    const usersSnap = await getDocs(usersQuery);
+    try {
+      const usersQuery = query(collection(db, "users"), where("email", "==", emailToSearch));
+      const usersSnap = await getDocs(usersQuery);
 
-    if (usersSnap.empty) {
-      console.error("No user found with that email");
-      return;
+      if (usersSnap.empty) {
+        alert(`No user found with the email: ${emailToSearch}`);
+        return;
+      }
+
+      const userDoc = usersSnap.docs[0];
+      await setDoc(doc(db, "projects", projectId, "members", userDoc.id), {
+        userId: userDoc.id,
+        role: "member",
+      });
+
+      handleCloseModal(); 
+
+    } catch (error) {
+      console.error("Error adding member:", error);
+      alert("Failed to add member. Check permissions.");
     }
-
-    const userDoc = usersSnap.docs[0];
-    await setDoc(doc(db, "projects", projectId, "members", userDoc.id), {
-      userId: userDoc.id,
-      role: "member",
-    });
-
-    setAddMember("");
-  }
+  };
 
   return (
-    <div>
-        <h1>Members:</h1>
-        {members.map(m => (
-            <p key={m.userId}> - {m.displayName}</p>
-        ))}
-        <Form onSubmit={(e) => handleAddMember(e)}>
-          <Form.Control
-            type="search"
-            placeholder="Email"
-            value={addMember}
-            size="lg"
-            onChange={(e) => setAddMember(e.target.value)}
-          />
-          <Button type="submit">Add Member</Button>
-        </Form>
+    <div className={styles.contentContainer}>
+      <div className={styles.teamHeader}>
+        <div className={styles.titleSection}>
+          <h2 className={styles.pageTitle}>Team</h2>
+          <p className={styles.pageSubtitle}>Manage members and roles for this project</p>
+        </div>
+        
+        <Button variant="primary" className={styles.addBtn} onClick={handleShowModal}>
+          + Add Member
+        </Button>
+      </div>
+
+      <div className={styles.tableContainer}>
+        <div className={styles.tableHeader}>
+          <div className={styles.colMember}>Member</div>
+          <div className={styles.colRole}>Role</div>
+          <div className={styles.colEmail}>Email</div>
+          <div className={styles.colActions}></div> 
+        </div>
+
+        <div className={styles.tableBody}>
+          {members.map((member) => {
+            const isYou = currentUser?.uid === member.userId;
+            
+            return (
+              <div className={styles.tableRow} key={member.userId}>
+                <div className={`${styles.colMember} ${styles.memberInfo}`}>
+                  <div 
+                    className={styles.avatar} 
+                    style={{ backgroundColor: getAvatarColor(member.displayName) }}
+                  >
+                    {getInitials(member.displayName)}
+                  </div>
+                  <div className={styles.memberDetails}>
+                    <span className={styles.memberName}>{member.displayName}</span>
+                    <span className={styles.memberTitle}>{member.jobTitle}</span>
+                  </div>
+                </div>
+                
+                <div className={`${styles.colRole} ${styles.roleInfo}`}>
+                  <span className={`${styles.badge} ${styles.roleBadge}`}>
+                    {member.role.toLowerCase() === 'owner' 
+                      ? 'Admin' 
+                      : member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                  </span>
+                  {isYou && <span className={`${styles.badge} ${styles.youBadge}`}>You</span>}
+                </div>
+                
+                <div className={`${styles.colEmail} ${styles.emailText}`}>
+                  {member.email}
+                </div>
+
+                <div className={styles.colActions}>
+                  <button 
+                    className={styles.actionBtn} 
+                    aria-label="Member actions"
+                    onClick={() => console.log(`Clicked actions for ${member.displayName}`)}
+                  >
+                    ...
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          
+          {members.length === 0 && (
+            <div className={styles.emptyState}>No members found. Add someone above!</div>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }
