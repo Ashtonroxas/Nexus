@@ -32,23 +32,17 @@ function NexusLayout() {
         </Offcanvas.Body>
       </Offcanvas>
 
-      {/* Desktop Sidebar */}
-      {/* <Row className="min-vh-100 g-0 flex-nowrap">
-        <Col lg={2} className="p-0 d-none d-lg-block">
-          <Sidebar variant="desktop" />
-        </Col>
-        <Col className={`${styles.content} p-3`}>
-          <Outlet />
-        </Col>
-      </Row> */}
-
       <div className={styles.cont}>
         <aside className={styles.sidebarColumn}>
           <Sidebar variant="desktop" />
         </aside>
 
         <main className={`${styles.contentColumn} p-3`}>
-          <Outlet context={{ menuButton }}/>
+          {/* Passes toggleSidebar down to your Team page */}
+          <Outlet context={{ 
+            menuButton, 
+            toggleSidebar: () => setShowSidebar(true) 
+          }}/>
         </main>
       </div>
 
