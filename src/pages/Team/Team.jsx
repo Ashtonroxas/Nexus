@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useOutletContext } from "react-router-dom"; 
 import { useAuth } from "../../firebase/AuthContext";
-import { collection, onSnapshot, doc, getDoc, getDocs, query, where, setDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
-import { Form, Button, Modal } from "react-bootstrap";
+import { Menu } from "lucide-react"; 
 import styles from './Team.module.css';
 
 // Helper to generate initials from a display name
@@ -26,16 +26,22 @@ function Team() {
   const { projectId } = useParams();
   const { currentUser } = useAuth();
   
+  // Grab the toggle function from the Layout context
+  const { toggleSidebar } = useOutletContext();
+  
   const [members, setMembers] = useState([]);
-  const [addMember, setAddMember] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [projectName, setProjectName] = useState("Loading...");
 
-  // Modal Handlers
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setAddMember(""); 
-  };
-  const handleShowModal = () => setShowModal(true);
+  // Fetch project name for the breadcrumb
+  useEffect(() => {
+    if (!projectId) return;
+    const unsubscribe = onSnapshot(doc(db, "projects", projectId), (docSnap) => {
+      if (docSnap.exists()) {
+        setProjectName(docSnap.data().name || "Untitled Project");
+      }
+    });
+    return () => unsubscribe();
+  }, [projectId]);
 
   // Fetch members from Firestore
   useEffect(() => {
@@ -69,107 +75,95 @@ function Team() {
     return () => unsubscribe();
   }, [projectId, currentUser]);
 
-  // Add new member logic
-  const handleAddMember = async (e) => {
-    e.preventDefault();
-    const emailToSearch = addMember.trim().toLowerCase(); 
-    if (!emailToSearch) return;
-
-    try {
-      const usersQuery = query(collection(db, "users"), where("email", "==", emailToSearch));
-      const usersSnap = await getDocs(usersQuery);
-
-      if (usersSnap.empty) {
-        alert(`No user found with the email: ${emailToSearch}`);
-        return;
-      }
-
-      const userDoc = usersSnap.docs[0];
-      await setDoc(doc(db, "projects", projectId, "members", userDoc.id), {
-        userId: userDoc.id,
-        role: "member",
-      });
-
-      handleCloseModal(); 
-
-    } catch (error) {
-      console.error("Error adding member:", error);
-      alert("Failed to add member. Check permissions.");
-    }
-  };
-
   return (
     <div className={styles.contentContainer}>
-      <div className={styles.teamHeader}>
+      
+      {/* Mobile Top Bar (Hamburger + Breadcrumbs) */}
+      <div className={styles.mobileTopBar}>
+        <button className={styles.menuToggle} onClick={toggleSidebar} aria-label="Open Menu">
+          <Menu size={28} color="#6366F1" strokeWidth={2} />
+        </button>
+        <div className={styles.breadcrumb}>
+          <span className={styles.breadcrumbMuted}>Projects / </span>
+          <span className={styles.breadcrumbActive}>{projectName}</span>
+        </div>
+      </div>
+
+      <hr className={styles.mobileDivider} />
+
+      {/* Page Title & Add Button */}
+      <header className={styles.teamHeader}>
         <div className={styles.titleSection}>
           <h2 className={styles.pageTitle}>Team</h2>
           <p className={styles.pageSubtitle}>Manage members and roles for this project</p>
         </div>
         
-        <Button variant="primary" className={styles.addBtn} onClick={handleShowModal}>
+        <button className={styles.addBtn} onClick={() => alert("Invite flow coming soon!")}>
           + Add Member
-        </Button>
-      </div>
+        </button>
+      </header>
 
-      <div className={styles.tableContainer}>
-        <div className={styles.tableHeader}>
-          <div className={styles.colMember}>Member</div>
-          <div className={styles.colRole}>Role</div>
-          <div className={styles.colEmail}>Email</div>
-          <div className={styles.colActions}></div> 
-        </div>
+      {/* The White Card Container */}
+      <div className={styles.tableCard}>
+        <h3 className={styles.cardTitle}>Member</h3>
 
-        <div className={styles.tableBody}>
-          {members.map((member) => {
-            const isYou = currentUser?.uid === member.userId;
+        {/* Scrollable Wrapper for the table */}
+        <div className={styles.tableScrollWrapper}>
+          <div className={styles.tableHeader}>
+            <div className={styles.colMember}>Member</div>
+            <div className={styles.colRole}>Role</div>
+            <div className={styles.colEmail}>Email</div>
+            <div className={styles.colActions}></div> 
+          </div>
+
+          <div className={styles.tableBody}>
+            {members.map((member) => {
+              const isYou = currentUser?.uid === member.userId;
+              
+              return (
+                <div className={styles.tableRow} key={member.userId}>
+                  <div className={`${styles.colMember} ${styles.memberInfo}`}>
+                    <div 
+                      className={styles.avatar} 
+                      style={{ backgroundColor: getAvatarColor(member.displayName) }}
+                    >
+                      {getInitials(member.displayName)}
+                    </div>
+                    <div className={styles.memberDetails}>
+                      <span className={styles.memberName}>{member.displayName}</span>
+                      <span className={styles.memberTitle}>{member.jobTitle}</span>
+                    </div>
+                  </div>
+                  
+                  <div className={`${styles.colRole} ${styles.roleInfo}`}>
+                    <span className={`${styles.badge} ${styles.roleBadge}`}>
+                      {member.role.toLowerCase() === 'owner' 
+                        ? 'Admin' 
+                        : member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                    </span>
+                    {isYou && <span className={`${styles.badge} ${styles.youBadge}`}>You</span>}
+                  </div>
+                  
+                  <div className={`${styles.colEmail} ${styles.emailText}`}>
+                    {member.email}
+                  </div>
+
+                  <div className={styles.colActions}>
+                    <button className={styles.actionBtn} aria-label="Member actions">
+                      ...
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
             
-            return (
-              <div className={styles.tableRow} key={member.userId}>
-                <div className={`${styles.colMember} ${styles.memberInfo}`}>
-                  <div 
-                    className={styles.avatar} 
-                    style={{ backgroundColor: getAvatarColor(member.displayName) }}
-                  >
-                    {getInitials(member.displayName)}
-                  </div>
-                  <div className={styles.memberDetails}>
-                    <span className={styles.memberName}>{member.displayName}</span>
-                    <span className={styles.memberTitle}>{member.jobTitle}</span>
-                  </div>
-                </div>
-                
-                <div className={`${styles.colRole} ${styles.roleInfo}`}>
-                  <span className={`${styles.badge} ${styles.roleBadge}`}>
-                    {member.role.toLowerCase() === 'owner' 
-                      ? 'Admin' 
-                      : member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                  </span>
-                  {isYou && <span className={`${styles.badge} ${styles.youBadge}`}>You</span>}
-                </div>
-                
-                <div className={`${styles.colEmail} ${styles.emailText}`}>
-                  {member.email}
-                </div>
-
-                <div className={styles.colActions}>
-                  <button 
-                    className={styles.actionBtn} 
-                    aria-label="Member actions"
-                    onClick={() => console.log(`Clicked actions for ${member.displayName}`)}
-                  >
-                    ...
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-          
-          {members.length === 0 && (
-            <div className={styles.emptyState}>No members found. Add someone above!</div>
-          )}
+            {members.length === 0 && (
+              <div className={styles.emptyState}>No members found in this project.</div>
+            )}
+          </div>
         </div>
       </div>
-
+      
     </div>
   );
 }
