@@ -1,173 +1,223 @@
 :root {
-    --sidebar-background: #F7F8FC;
-    --active-item-bg: #E9EDFF;
+  --sidebar-background: #F8F9FB;
+  --active-item-bg: #EEF2FF; 
 }
 
 .sidebar {
-    background-color: var(--sidebar-background);
-    border-right: 1px solid var(--stroke-faded);
+  background-color: var(--sidebar-background);
+  border-right: 1px solid #E5E7EB;
 
-    min-width: 240px;
-    max-width: 280px;
-    height: 100%;
+  min-width: 240px;
+  max-width: 280px;
+  height: 100%;
 
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebarMain {
-    flex: 1;
+  flex: 1;
 }
 
+/* Header matching the mockup */
 .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0;
-    margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.headerSpacer {
+  flex: 1;
+}
+
+.logoGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.logoImg {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .brand {
-    font-weight: 700;
-    font-size: 2.25rem;
-    color: #000000;
+  font-weight: 800;
+  font-size: 1.75rem;
+  color: #000000;
+  letter-spacing: -0.5px;
+}
+
+/* Sidebar toggle button (top right) */
+.collapseBtn {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.collapseBtn:hover {
+  background: #E5E7EB;
 }
 
 .separator {
-    border: none;
-    border-top: 1px solid var(--stroke-solid);
-    margin-top: 0px;
+  border: none;
+  border-top: 1px solid #D1D5DB;
+  margin: 0 0 20px 0;
 }
 
 .backLink {
-    display:flex;
-    align-items: center;
-    gap: 10px;
-
-    font-weight: 500;
-    color: #000000;
-    text-decoration: none;
-    font-size: 0.9rem;
-    margin-top: 0px;
-    margin-bottom: 30px;
-}
-
-.nav {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.navButton {
-    display: block;
-    text-decoration: none;
-    text-align: center;
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: #FFFFFF;
-    color: #000000;
-    height: 45px;
-    margin-bottom: 10px;
-}
-
-.active {
-    background-color: var(--active-item-bg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: #000000;
+  text-decoration: none;
+  font-size: 1.05rem;
+  margin-bottom: 28px;
 }
 
 .sectionTitle {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #000000;
-    margin-top: 20px;
-    margin-bottom: 10px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #000000;
+  margin-bottom: 16px;
+  letter-spacing: -0.3px;
 }
 
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Floating White Buttons from mockup */
+.navButton {
+  display: block;
+  text-decoration: none;
+  text-align: center; /* Centers the text like the mockup */
+  padding: 14px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #111827;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Slight shadow to lift off background */
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+.active {
+  background-color: var(--active-item-bg);
+  color: #111827;
+  box-shadow: none; /* Flat appearance when active */
+}
+
+.active:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Account Section Styles (Preserved) --- */
+
 .sidebarBottom {
-    position: relative;
-    margin-top: auto;
-    padding-top: 12px;
-    border-top: 1px solid var(--stroke-solid);
+  position: relative;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #D1D5DB;
 }
 
 .accountButton {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #FFFFFF;
-    border: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
 }
 
 .accountButton:hover {
-    background: #F3F4F6;
+  background: #E5E7EB;
 }
 
 .accountInfo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
 .accountImage {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .accountName {
-    font-weight: 500;
-    color: #111111;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-weight: 500;
+  color: #111111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .accountChevron {
-    transition: transform 0.2s ease;
-    flex-shrink: 0;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .accountChevronOpen {
-    transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .accountMenu {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 8px;
-    padding: 8px;
-    border-radius: 10px;
-    background: #FFFFFF;
-    border: 1px solid var(--stroke-faded);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .accountMenuItem {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    background: transparent;
-    border-radius: 8px;
-    text-decoration: none;
-    color: #111111;
-    text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #111111;
+  text-align: left;
+  font-size: 0.95rem;
 }
 
 .accountMenuItem:hover {
-    background: #f3f4f6;
-    color: #111111;
-}
-
-.logoLink { 
-    text-decoration: none;
+  background: #F3F4F6;
+  color: #111111;
 }
