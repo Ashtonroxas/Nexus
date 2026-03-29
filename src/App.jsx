@@ -12,20 +12,20 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<AuthPage />} />
-        <Route path="/" element={
+        <Route element={
           <ProtectedRoute>
             <NexusLayout />
           </ProtectedRoute>
         }>
-          <Route index element={<Navigate to="projects" replace />} />
-          <Route path="projects" element={<MyProjects />} />
-          <Route path="profile" element={<ProfilePage />} />
+          <Route path="/" element={<Navigate to="/projects" replace />} />
+          <Route path="/projects" element={<MyProjects />} />
+          <Route path="/profile" element={<ProfilePage />} />
 
-          <Route path="projects/:projectId" element={<DependencyGraph />} />
-          <Route path="projects/:projectId/report" element={<div>Coming Soon</div>} />
-          <Route path="projects/:projectId/team" element={<Team />} />
+          <Route path="/projects/:projectId" element={<DependencyGraph />} />
+          <Route path="/projects/:projectId/report" element={<div>Coming Soon</div>} />
+          <Route path="/projects/:projectId/team" element={<Team />} />
 
-          <Route path="*" element={<Navigate to="projects" replace />} />
+          <Route path="/*" element={<Navigate to="/projects" replace />} />
         </Route>
       </Routes>
     </Router>
