@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation, useParams } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, ChevronUp, User, LogOut } from 'lucide-react';
+import { ArrowLeft, ChevronUp, User, LogOut, PanelLeftClose } from 'lucide-react';
 import { signOut } from "firebase/auth";
 import { auth, db } from "../../firebase/firebase";
 import { doc, getDoc } from "firebase/firestore"; 
@@ -71,13 +71,27 @@ function Sidebar({ variant = "desktop", onNavigate }) {
   return (
     <div className={wrapperStyling}>
       <div className={styles.sidebarMain}>
-        <div className= {`${styles.header} py-0 mt-0`} >
-          <Link to="/projects" className={styles.logoLink}>
-            <div className={styles.brand}>Nexus</div>
+        
+        {/* Updated Header Layout */}
+        <div className={styles.header}>
+          <Link to="/projects" className={styles.logoGroup} onClick={handleNav}>
+            {/* Show logo on the left only for mobile */}
+            {variant === "mobile" && (
+              <img src={logo} alt="Nexus Logo" className={styles.logoImg} />
+            )}
+            <span className={styles.brand}>Nexus</span>
           </Link>
-          <Link to="/projects" className={styles.logoLink}>
-            <img src={logo} alt="Nexus Logo" width="47px" />
-          </Link>
+          
+          {/* Show Logo on desktop right, or Collapse Icon on mobile right */}
+          {variant === "desktop" ? (
+            <Link to="/projects" className={styles.logoLink}>
+              <img src={logo} alt="Nexus Logo" width="47px" />
+            </Link>
+          ) : (
+            <button className={styles.collapseBtn} onClick={handleNav} aria-label="Close Menu">
+              <PanelLeftClose size={24} color="#6B7280" />
+            </button>
+          )}
         </div>
 
         <hr className={styles.separator} />
@@ -85,7 +99,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
         { projectSidebar ? (
           <> {/* Inside Project Menu */}
             <Link to="/projects" className={styles.backLink} onClick={handleNav}>
-              <ArrowLeft size={18} />
+              <ArrowLeft size={22} strokeWidth={2.5} />
               Back to My Projects
             </Link>
 
@@ -95,6 +109,16 @@ function Sidebar({ variant = "desktop", onNavigate }) {
 
             <nav className={styles.nav}>
               <NavLink
+                to={`/projects/${projectId}/report`}
+                className={({ isActive }) =>
+                  `${styles.navButton} ${isActive ? styles.active : ""}`
+                }
+                onClick={handleNav}
+              >
+                Overview
+              </NavLink>
+
+              <NavLink
                 to={`/projects/${projectId}`} end
                 className={({ isActive }) =>
                   `${styles.navButton} ${isActive ? styles.active : ""}`
@@ -102,16 +126,6 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                 onClick={handleNav}
               >
                 Dependency Graph
-              </NavLink>
-
-              <NavLink
-                to={`/projects/${projectId}/report`}
-                className={({ isActive }) =>
-                  `${styles.navButton} ${isActive ? styles.active : ""}`
-                }
-                onClick={handleNav}
-              >
-                Risk Report
               </NavLink>
 
               <NavLink
@@ -141,54 +155,55 @@ function Sidebar({ variant = "desktop", onNavigate }) {
           </>
         )}
       </div>
+
       <div className={styles.sidebarBottom} ref={accountRef}>
+        <button 
+          type="button"
+          className={styles.accountButton}
+          onClick={() => setShowAccountMenu((prev) => !prev)}
+        >
+          <div className={styles.accountInfo}>
+            <img src={sidebarUser.imgURL}
+              alt="Profile Image"
+              className={styles.accountImage} />
+            <span className={styles.accountName}>{currentUser?.displayName || "User"}</span>
+          </div>
+
+          <ChevronUp size={18}
+            className={`${styles.accountChevron} ${
+              showAccountMenu ? styles.accountChevronOpen : ""
+            }`}
+            />
+        </button>
+
+        {showAccountMenu && (
+          <div className={styles.accountMenu}>
+            <NavLink
+              to="/profile"
+              className={styles.accountMenuItem}
+              onClick={() => {
+                setShowAccountMenu(false);
+                handleNav();
+              }}
+              >
+                <User size={16} />
+                My Profile
+            </NavLink>
+
             <button 
               type="button"
-              className={styles.accountButton}
-              onClick={() => setShowAccountMenu((prev) => !prev)}
+              className={styles.accountMenuItem}
+              onClick={() => {
+                setShowAccountMenu(false);
+                handleLogout();
+              }}
             >
-              <div className={styles.accountInfo}>
-                <img src={sidebarUser.imgURL}
-                  alt="Profile Image"
-                  className={styles.accountImage} />
-                <span className={styles.accountName}>{currentUser?.displayName || "User"}</span>
-              </div>
-
-              <ChevronUp size={18}
-                className={`${styles.accountChevron} ${
-                  showAccountMenu ? styles.accountChevronOpen : ""
-                }`}
-                />
+              <LogOut size={16} />
+              Sign Out
             </button>
-
-            {showAccountMenu && (
-              <div className={styles.accountMenu}>
-                <NavLink
-                  to="/profile"
-                  className={styles.accountMenuItem}
-                  onClick={() => {
-                    setShowAccountMenu(false);
-                    handleNav();
-                  }}
-                  >
-                    <User size={16} />
-                    My Profile
-                </NavLink>
-
-                <button 
-                  type="button"
-                  className={styles.accountMenuItem}
-                  onClick={() => {
-                    setShowAccountMenu(false);
-                    handleLogout();
-                  }}
-                >
-                  <LogOut size={16} />
-                  Sign Out
-                </button>
-              </div>
-            )}
           </div>
+        )}
+      </div>
     </div>
   );
 }
