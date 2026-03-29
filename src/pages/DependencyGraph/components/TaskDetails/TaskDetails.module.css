@@ -1,0 +1,271 @@
+.taskDetailsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bottomSheetHandle {
+  width: 48px;
+  height: 5px;
+  border-radius: 999px;
+  background: #D1D5DB;
+  margin: 0 auto 4px;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.taskCode {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.closeIcon {
+  flex-shrink: 0;
+  cursor: pointer;
+  color: #6B7280;
+}
+
+.closeIcon:hover {
+  color: #111827;
+}
+
+.titleInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+  padding: 0;
+}
+
+.descriptionInput {
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #6B7280;
+
+  min-height: 32px;
+  max-height: 64px;
+
+  padding: 0;
+  overflow-y: auto;
+}
+
+.titleInput:focus,
+.descriptionInput:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+}
+
+.infoField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.infoLabel,
+.linkLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6B7280;
+}
+
+.selectWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background: #FFFFFF;
+  padding: 3px 8px;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.statusTodo {
+  background: var(--todo-color);
+}
+
+.statusInProgress {
+  background: var(--inprogress-color);
+}
+
+.statusDone {
+  background: var(--done-color);
+}
+
+.statusSelect {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 11px;
+  line-height: 1;
+  color: #111827;
+  padding: 0 14px 0 0;
+  appearance: none;
+  cursor: pointer;
+}
+
+.pillSelect {
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1;
+  padding: 5px 22px 5px 10px;
+  width: fit-content;
+  border: 1px solid transparent;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+
+.lowPill {
+  background: #DDF3DF;
+  color: #54A964;
+  border-color: #BFE7C4;
+}
+
+.mediumPill {
+  background: #FFF0CF;
+  color: #D89A28;
+  border-color: #F3D48B;
+}
+
+.highPill {
+  background: #F9DDCB;
+  color: #D67B32;
+  border-color: #F0BE96;
+}
+
+.severePill {
+  background: #F6D5D6;
+  color: #D65F63;
+  border-color: #EAB1B4;
+}
+
+.assigneeRow,
+.dateRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  position: relative;
+}
+
+.assigneeBadge {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #DBE4FF;
+  color: #5B5BD6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.inlineInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  color: #111827;
+  padding: 0;
+  min-width: 90px;
+}
+
+.dateInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  color: #111827;
+  padding: 0;
+}
+
+.dateIcon {
+  color: #6B7280;
+  flex-shrink: 0;
+}
+
+.linkSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.linkCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #F5F5F5;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.blockedByArrow {
+  color: #F07B7B;
+  flex-shrink: 0;
+}
+
+.blockingArrow {
+  color: #6676F2;
+  flex-shrink: 0;
+}
+
+.linkCode {
+  font-size: 11px;
+  color: #9CA3AF;
+  white-space: nowrap;
+}
+
+.linkTitle {
+  font-size: 12px;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyDependency {
+  font-size: 13px;
+  color: #9CA3AF;
+}
+
+@media (max-width: 767px) {
+  .titleInput {
+    font-size: 20px;
+  }
+
+  .infoGrid {
+    gap: 16px 18px;
+  }
+}

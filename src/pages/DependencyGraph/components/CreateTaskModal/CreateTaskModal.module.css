@@ -1,0 +1,304 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal {
+  width: min(430px, 92vw);
+  height: auto;
+  background: #ffffff;
+  border: 1px solid #DBE1EA;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(16, 24, 40, 0.12);
+  overflow: visible;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.titleIcon {
+  color: #6366F1;
+  flex-shrink: 0;
+}
+
+.titleInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #111827;
+  background: transparent;
+  line-height: 1.2;
+}
+
+.titleInput::placeholder {
+  color: #9CA3AF;
+}
+
+.form {
+  padding: 12px 16px 16px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.textarea,
+.compactInput {
+  width: 100%;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font: inherit;
+  color: #111827;
+  background: #FFFFFF;
+  outline: none;
+}
+
+.textarea:focus,
+.compactInput:focus,
+.titleInput:focus {
+  border-color: #6366F1;
+}
+
+.textarea {
+  min-height: 72px;
+  resize: none;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  align-items: center;
+  column-gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fieldRowLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.rowIconPurple {
+  color: #6366F1;
+  flex-shrink: 0;
+}
+
+.rowIconGray {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+.rowIconGreen {
+  color: #28AF60;
+  flex-shrink: 0;
+}
+
+.rowIconOrange {
+  color: #F59E0B;
+  flex-shrink: 0;
+}
+
+.compactInput {
+  height: 36px;
+  padding: 0 10px;
+  font-size: 0.88rem;
+}
+
+/* NEW: custom dropdown styling */
+.dropdownContainer {
+  position: relative;
+}
+
+.pillField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background: #FFFFFF;
+  cursor: pointer;
+}
+
+.pillFieldLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selectChevron {
+  color: #6B7280;
+  flex-shrink: 0;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 10px 20px rgba(16, 24, 40, 0.1);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  background: #FFFFFF;
+}
+
+.dropdownItem:hover {
+  background: #F8FAFC;
+}
+
+/* Status dots */
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.statusTodo {
+  background: #6F7371;
+}
+
+.statusInProgress {
+  background: #282DAF;
+}
+
+.statusDone {
+  background: #28AF60;
+}
+
+/* Complexity pills */
+.complexityPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.complexityLow {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+.complexityMedium {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.complexityHigh {
+  background: #FED7AA;
+  color: #9A3412;
+}
+
+.complexitySevere {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cancelButton,
+.createButton {
+  border-radius: 9px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.cancelButton {
+  border: 1px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #475569;
+}
+
+.createButton {
+  border: none;
+  background: #6366F1;
+  color: #FFFFFF;
+}
+
+.createButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .modal {
+    width: 94vw;
+  }
+
+  .header {
+    padding: 12px 14px;
+  }
+
+  .form {
+    padding: 12px 14px 14px;
+  }
+
+  .fieldRow {
+    grid-template-columns: 1fr;
+    row-gap: 6px;
+  }
+
+  .titleInput {
+    font-size: 0.95rem;
+  }
+}

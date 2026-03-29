@@ -1,56 +1,114 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../firebase/AuthContext";
 import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import styles from "./MyProjects.module.css";
 import ProjectCard from "./components/ProjectCard/ProjectCard";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { ArrowUpDown } from "lucide-react";
+
+import { 
+  collection,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+  doc,
+  setDoc,
+  deleteDoc,
+  query,
+  where,
+} from "firebase/firestore";
+import { db } from "../../firebase/firebase";
 
 function MyProjects() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const numProjects = 4; // Placeholder for the number of projects
+  const [projects, setProjects] = useState([]);
+  const numProjects = projects.length; // Placeholder for the number of projects
   const [sortBy, setSortBy] = useState("recent");
+  const { menuButton } = useOutletContext();
+  const { currentUser } = useAuth();
+  useEffect(() => {
+    if (!currentUser) return;
 
-  const dummyProject = [
-    {
-      id: 1,
-      name: 'Website Redesign',
-      description: 'Complete overhaul of website with new branding',
-      totalTasks: 4,
-      completedTasks: 1,
-      dueDate: '2026-03-31',
-      numMembers: 6,
-      color: '#6366F1',
-      owner: 1,
-    },
-    {
-      id: 2,
-      name: 'Mobile App Launch',
-      description: 'iOS and Android app launch for customer sign in portal',
-      totalTasks: 52,
-      completedTasks: 18,
-      dueDate: '2026-04-30',
-      numMembers: 8,
-      color: '#E25C3A',
-      owner: 0,
-    },
-    {
-      id: 3,
-      name: 'Marketing Campaign',
-      description: 'Q1 2026 marketing campaign across all media channels',
-      totalTasks: 38,
-      completedTasks: 31,
-      dueDate: '2026-02-28',
-      numMembers: 5,
-      color: '#10B981',
-      owner: 0,
-    },
-  ];
+    const q = query(
+      collection(db, "projects"),
+      where("ownerId", "==", currentUser.uid)
+    );
 
-  const sortedProjects = [...dummyProject].sort((a, b) => {
-    if (sortBy === "dueDate") return new Date(a.dueDate) - new Date(b.dueDate);
-    if (sortBy === "recent") return a.id - b.id;
-    if (sortBy === "progress") return (b.completedTasks / b.totalTasks) - (a.completedTasks / a.totalTasks);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const projectsArr = snapshot.docs.map((doc) => {
+        const data = doc.data();
+
+        return {
+          id: doc.id,
+          name: data.name || "Untitled Project",
+          description: data.description || "",
+          completedTasks: data.completedTaskCount || 0,
+          totalTasks: data.taskCount || 0,
+          owner: data.ownerId || "",
+          dueDate: data.dueDate?.toDate? data.dueDate.toDate() : null,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+          numMembers: data.memberCount || 1,
+          color: data.color || "#6366F1",
+        };
+      });
+
+      setProjects(projectsArr);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleNewProject = async () => {
+    try {
+      if (!currentUser) return;
+
+      const currentUserId = currentUser?.uid;
+
+      const projectRef = await addDoc(collection(db, "projects"), {
+        name: "Untitled Project",
+        description: "",
+        ownerId: currentUserId,
+        taskCount: 0,
+        completedTaskCount: 0,
+        dueDate: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      await setDoc(doc(db, "projects", projectRef.id, "members", currentUserId), {
+        userId: currentUserId,
+        role: "owner",
+      });
+
+      navigate(`/projects/${projectRef.id}`);
+    } catch (error) {
+      console.error("Error creating project: ", error);
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await deleteDoc(doc(db, "projects", projectId));
+    } catch (error) {
+      console.error("Error deleting project: ", error);
+    }
+  };
+
+  const sortedProjects = [...projects].sort((a, b) => {
+    if (sortBy === "dueDate") {
+      return (
+        (a.dueDate ? a.dueDate.getTime() : Infinity) - 
+        (b.dueDate ? b.dueDate.getTime() : Infinity)
+      );
+    }
+    if (sortBy === "recent") {
+      return (
+        (b.updatedAt?.getTime?.() || 0) -
+        (a.updatedAt?.getTime?.() || 0)
+      );
+    }
+    if (sortBy === "progress") return (b.completedTasks / (b.totalTasks || 1)) - (a.completedTasks / (a.totalTasks || 1));
     return 0;
   });
 
@@ -60,8 +118,8 @@ function MyProjects() {
   };
 
   return (
-    <>
-      <Row className="p-3">
+    <div className="d-flex flex-column">
+      <Row className="p-3 order-2 order-lg-1">
         <Form onSubmit={(e) => handleSearch(e)}>
           <Form.Control
             type="search"
@@ -73,12 +131,17 @@ function MyProjects() {
           />
         </Form>
       </Row>
-      <Row className="p-3">
-        <Col>
-          <h2>My Projects</h2>
-          <p>View and manage all your projects • {numProjects} active projects</p>
+      <Row className="p-3 order-1 order-lg-2">
+        <Col xs={12} lg>
+          <div className={styles.mobileHeader}>
+            {menuButton}
+            <div>
+              <h2>My Projects</h2>
+              <p>View and manage all your projects • {numProjects} active projects</p>
+            </div>
+          </div>
         </Col>
-        <Col id={styles["dashboard-buttons"]}>
+        <Col xs={12} lg="auto" id={styles["dashboard-buttons"]}>
           <div className={styles.sortDropdown}>
             <Dropdown>
               <Dropdown.Toggle id={styles["sort-by"]} size="lg">
@@ -86,7 +149,7 @@ function MyProjects() {
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 <Dropdown.Item onClick={() => setSortBy("recent")} active={sortBy === "recent"}>
-                  Recently Added
+                  Recently Edited
                 </Dropdown.Item>
                 <Dropdown.Item onClick={() => setSortBy("dueDate")} active={sortBy === "dueDate"}>
                   Approaching Deadline
@@ -97,21 +160,30 @@ function MyProjects() {
               </Dropdown.Menu>
             </Dropdown>
           </div>
-          <Button id={styles["new-project"]} size="lg">
+          <Button id={styles["new-project"]} 
+                  size="lg"
+                  onClick={handleNewProject}>
             + New Project
           </Button>
         </Col>
       </Row>
-      <Row className="p-3 gap-3">
-        {sortedProjects.map((project) => (
-          <ProjectCard 
-            key={project.id}
-            project={project}
-            onClick={() => navigate(`/projects/abc123`)}
-          />
-        ))}
+      <Row className="p-3 gap-3 justify-content-evenly justify-content-md-start order-3">
+        {sortedProjects.map((project) => {
+          const currentUserId = currentUser?.uid;
+          const canDelete = project.owner === currentUserId;
+
+          return (
+            <ProjectCard 
+              key={project.id}
+              project={project}
+              onClick={() => navigate(`/projects/${project.id}`)}
+              canDelete={canDelete}
+              onDelete={handleDeleteProject}
+            />
+          );
+        })}
       </Row>
-    </>
+    </div>
   );
 }
 

@@ -1,0 +1,60 @@
+.content {
+  max-width: 400px;
+  width: 100%;
+}
+
+.logoText {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111111;
+}
+
+.headline {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  margin-bottom: 1rem;
+}
+
+.googleBtn {
+  background-color: #fff !important;
+  border: 1.5px solid #D1D5DB !important;
+  color: #111111 !important;
+  border-radius: 10px;
+  font-weight: 500;
+  box-shadow: none !important;
+}
+
+.googleBtn:hover,
+.googleBtn:focus,
+.googleBtn:active {
+  background-color: #F9FAFB !important;
+  border-color: #9CA3AF !important;
+  color: #111111 !important;
+}
+
+.terms {
+  font-size: 0.82rem;
+  color: #9CA3AF;
+}
+
+.terms a {
+  color: #6366F1;
+  text-decoration: none;
+}
+
+.terms a:hover {
+  text-decoration: underline;
+}
+
+.rightPanel {
+  background: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 55%, #C7D2FE 100%);
+}
+
+.screenshot {
+  width: 90%;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2);
+  object-fit: cover;
+}

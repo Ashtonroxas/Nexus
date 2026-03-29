@@ -1,3 +1,7 @@
+body {
+  background-color: var(--background) !important;
+}
+
 #dashboard-buttons {
     display: flex;
     justify-content: flex-end;
@@ -41,4 +45,24 @@
 .sortDropdown :global(.dropdown-item.active) {
   background: transparent;
   color: #6366F1;
+}
+
+.mobileHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+@media (min-width: 992px) {
+  .mobileHeader {
+    display: block;
+  }
+}
+
+@media(max-width: 991.99px) {
+  #dashboard-buttons {
+    justify-content: flex-start;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
 }

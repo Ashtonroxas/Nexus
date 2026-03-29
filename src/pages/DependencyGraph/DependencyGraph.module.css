@@ -1,39 +1,54 @@
-/* MAIN GRAPH CONTAINER & CANVAS */
+:root {
+  --outlines: #E5E7EB;
+}
 
-/* Outer wrapper. Gives the rounded edges(circular look)  */
 .blueprintContainer {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 2rem); 
-  background-color: #FDFDFF;
-  border-top-left-radius: 16px;
-  border-bottom-left-radius: 16px;
-  border: 1px solid #E5E7EB;
-  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.03);
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid var(--outlines);
   overflow: hidden;
-  position: relative;
 }
 
 .blueprintHeader {
-  padding: 1.5rem;
-  border-bottom: 1px solid #E5E7EB;
-  background-color: white;
-  z-index: 10;
+  height: fit-content;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--outlines);
+  background-color: var(--background);
 }
 
-/*Subtle grid pattern. */
 .blueprintCanvas {
   flex-grow: 1;
   width: 100%;
   height: 100%;
   position: relative;
-  background-image: 
-    linear-gradient(to right, rgba(229, 231, 235, 0.3) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(229, 231, 235, 0.3) 1px, transparent 1px);
-  background-size: 32px 32px;
+  min-height: 0;
+  overflow: hidden;
 }
 
-/* + Add Task button */
+.sidebarOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.taskSidebarPanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 360px;
+  max-width: 92vw;
+  height: 100%;
+  background: #FFFFFF;
+  border-left: 1px solid var(--outlines);
+  box-shadow: -10px 0 30px #0F172A1F;
+  padding: 24px 20px;
+  overflow-y: auto;  
+}
+
 .floatingToolbar {
   position: absolute;
   top: 20px;
@@ -42,139 +57,276 @@
   padding: 10px 15px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--outlines);
   z-index: 10;
+  display: flex;
+  gap: 10px;
 }
 
-/* NODE UI */
+.desktopHeader {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
 
-/* The base styling for custom React Flow nodes */
-.taskCard {
-  width: 288px; 
+.mobileHeader {
+  display: none;
+}
+
+.colorDot {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 1px #E5E7EB;
+}
+
+.projectDescriptionInput {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1rem;
+  color: var(--stroke-solid);
+  padding: 0;
+  margin: 0;
+  width: min(560px, 100%);
+  min-height: 48px;
+  resize: none;
+}
+
+.projectDescriptionInput:focus {
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.projectDescriptionInput:hover,
+.desktopBreadcrumbTitle:hover {
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
+}
+
+.projectDescriptionInput:focus,
+.desktopBreadcrumbTitle:focus {
+  background: rgba(0,0,0,0.05);
+  border-radius: 6px;
+}
+
+.saveStatus {
+  font-size: 0.9rem;
+  color: var(--stroke-solid);
+  min-height: 1.2rem;
+}
+
+.colorPickerPopover {
+  position: absolute;
+  top: 28px;
+  left: 0;
+  z-index: 20;
   background: white;
-  border: 1px solid #F3F4F6;
-  border-radius: 12px; 
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease; 
+  padding: 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  width: fit-content;
+}
+
+.colorPickerWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  margin-top: 0.2rem;
+}
+
+.mobileTopRow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.menuRow {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mobileTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.mobileBreadcrumb {
+  font-size: 0.95rem;
+  color: #98A2B3;
+  white-space: nowrap;
+}
+
+.mobileProjectNameInput {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111111;
+}
+
+.mobileProjectNameInput:focus {
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.mobileProjectDescriptionInput {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin-top: 0.2rem;
+  width: 100%;
+  min-height: 36px;
+  resize: none;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--stroke-solid);
+}
+
+.mobileProjectDescriptionInput:focus {
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.mobileSaveStatus {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--stroke-solid);
+  min-height: 1rem;
+}
+
+.mobileDescriptionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  margin-top: 0.45rem;
+}
+
+.desktopTextBlock {
   display: flex;
   flex-direction: column;
-}
-
-.taskCard:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.cardHeader {
-  padding: 16px;
-  border-bottom: 1px solid #F9FAFB;
-}
-
-.titleRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-/*Title edits right on the canvas */
-.taskTitleInput {
-  font-size: 14px;
-  font-weight: 700;
-  color: #111827; 
-  border: none;
-  outline: none;
-  background: transparent;
+  gap: 0.5rem;
   width: 100%;
+  min-width: 0;
+}
+.desktopBreadcrumbRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.desktopBreadcrumb {
+  font-size: 1.5rem;
+  color: #98A2B3;
+  white-space: nowrap;
+}
+.desktopBreadcrumbTitle {
+  border: none;
+  background: transparent;
+  box-shadow: none;
   padding: 0;
-  line-height: 1.3;
-}
+  margin: 0;
+  min-width: 0;
 
-/* Circle showing completion status */
-.statusDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 4px;
-  cursor: pointer;
-}
-
-.metaRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.assigneeBlock {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.avatar {
-  width: 28px;
-  height: 28px;
-  background-color: var(--accent-button-bg);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 10px;
+  font-size: 1.5rem;
   font-weight: 700;
+  color: #111111;
 }
 
-.assigneeName {
-  font-size: 12px;
-  font-weight: 500;
-  color: #4B5563; 
-}
-
-.dateBlock {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #6B7280; 
-  font-size: 12px;
-}
-
-.cardFooter {
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Visual Complexity Badge on the card */
-.complexityTag {
-  padding: 4px 10px;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  appearance: none;
+.desktopBreadcrumbTitle:focus {
   outline: none;
-  cursor: default; 
+  box-shadow: none;
+  background: transparent;
 }
 
-/* Hooked index.css variables for theme consistency */
-.tagLow { background: var(--green-status-bg); color: var(--green-status-font); border-color: var(--green-status-font); }
-.tagMedium { background: var(--yellow-status-bg); color: var(--yellow-status-font); border-color: var(--yellow-status-font); }
-.tagHigh { background: var(--orange-status-bg); color: var(--orange-status-font); border-color: var(--orange-status-font); }
-.tagSevere { background: var(--red-status-bg); color: var(--red-status-font); border-color: var(--red-status-font); }
+.desktopDetailsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
 
-.statusTodo { background-color: var(--stroke-solid); }       
-.statusProgress { background-color: var(--accent-button-bg); }   
-.statusDone { background-color: var(--green-status-font); }       
+.bottomSheetOverlay {
+  position: absolute;
+  inset: 0;
+  background: #0F172A2E;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: stretch;
+}
 
-/*RESPONSIVENESS*/
+.bottomSheet {
+  width: 100%;
+  height: 70%;
+  background: #FFFFFF;
+  padding: 16px 18px 24px;
+  box-shadow: 0 -8px 30px #0000001F;
+  overflow-y: auto;
+}
 
-@media (max-width: 768px) {
+@media (min-width: 992px) {
+  .desktopHeader {
+    display: flex;
+  }
+
+  .mobileHeader {
+    display: none;
+  }
+
+  .projectDescriptionInput {
+    width: 520px;
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebarOverlay {
+    display: none;
+  }
+  .blueprintHeader {
+    padding: 1rem 1rem 0.875rem 1rem;
+  }
+
+  .desktopHeader {
+    display: none;
+  }
+
+  .mobileHeader {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    min-width: 0;
+  }
+
   .floatingToolbar {
-    top: auto;
-    bottom: 20px;
-    right: 50%;
-    transform: translateX(50%);
+    top: 12px;
+    right: 12px;
+    padding: 8px 10px;
+  }
+}
+
+@media (min-width: 768px) {
+  .bottomSheetOverlay {
+    display: none;
   }
 }

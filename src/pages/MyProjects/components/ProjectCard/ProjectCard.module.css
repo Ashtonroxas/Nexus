@@ -1,28 +1,8 @@
 #project-card {
     background-color: #FFFFFF;
+    border: 1px solid var(--stroke-faded);
     max-width: 350px;
     min-width: 350px;
     min-height: 350px;
     max-height: 350px;
-}
-
-#delete-warning {
-    max-width: 440px;
-    min-width: 440px;
-    min-height: 220px;
-    max-height: 220px;
-}
-
-#del-title {
-    color: #ff5c5c;
-}
-
-#snd-button {
-    background-color: #e0dede;
-    color: black;
-}
-
-#fst-button {
-    background-color: #ff5c5c;
-    color: white;
 }
