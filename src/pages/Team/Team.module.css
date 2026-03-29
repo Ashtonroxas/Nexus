@@ -4,12 +4,20 @@
   width: 100%;
 }
 
+/*  Mobile Specific Elements (Hidden on Desktop)  */
+.mobileTopBar {
+  display: none;
+}
+
+.mobileDivider {
+  display: none;
+}
+
 .teamHeader {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   margin-bottom: 24px;
-  flex-wrap: wrap;
   gap: 16px;
 }
 
@@ -19,55 +27,65 @@
 }
 
 .pageTitle {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #000000;
+  margin: 0 0 4px 0;
+  color: #111827;
 }
 
 .pageSubtitle {
   color: #6B7280;
   margin: 0;
   font-size: 14px;
+  line-height: 1.4;
 }
 
+/* Purple Button */
 .addBtn {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   white-space: nowrap;
-  background-color: var(--accent-button-bg, #6366F1) !important;
-  border-color: var(--accent-button-bg, #6366F1) !important;
-  color: white !important;
+  background-color: var(--accent-button-bg, #6366F1);
+  border: 1px solid var(--accent-button-bg, #6366F1);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .addBtn:hover {
-  background-color: #4F46E5 !important;
-  border-color: #4F46E5 !important;
+  background-color: #4F46E5;
+  border-color: #4F46E5;
 }
 
-.addBtn:focus,
-.addBtn:active {
-  background-color: #4338CA !important;
-  border-color: #4338CA !important;
-  box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25) !important;
-}
-
-/* Table Styles */
-.tableContainer {
+/* Table Card Container */
+.tableCard {
   background-color: #FFFFFF;
   border: 1px solid #E5E7EB;
-  border-radius: 8px;
+  border-radius: 24px; 
   overflow: hidden;
+}
+
+.cardTitle {
+  font-size: 24px;
+  font-weight: 500;
+  color: #111827;
+  padding: 24px 24px 16px 24px;
+  margin: 0;
+}
+
+.tableScrollWrapper {
+  width: 100%;
 }
 
 .tableHeader {
   display: flex;
-  padding: 16px 24px;
-  border-bottom: 1px solid #E5E7EB;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 12px 24px;
+  background-color: #EBEBEB; 
+  font-size: 15px;
+  font-weight: 400;
   color: #6B7280;
-  background-color: #F9FAFB;
 }
 
 .tableRow {
@@ -89,37 +107,27 @@
 }
 
 /* Column Widths */
-.colMember { flex: 2; }
-.colRole { flex: 1; }
-.colEmail { flex: 1.5; }
+.colMember { flex: 2; min-width: 0; }
+.colRole { flex: 1; min-width: 0; }
+.colEmail { flex: 1.5; display: block; min-width: 0; }
 
-/* Actions Column & Button Styles */
 .colActions {
   flex: 0 0 40px; 
   display: flex;
   justify-content: flex-end;
-  align-items: center;
 }
 
 .actionBtn {
   background: transparent;
   border: none;
-  font-size: 18px;
-  font-weight: 700;
-  color: #9CA3AF;
+  font-size: 20px;
+  font-weight: 900;
+  color: #111827;
   cursor: pointer;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  padding-bottom: 6px; 
+  padding-bottom: 8px;
 }
 
 .actionBtn:hover {
-  background-color: #F3F4F6;
   color: #374151;
 }
 
@@ -127,6 +135,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .avatar {
@@ -139,49 +148,191 @@
   font-size: 14px;
   font-weight: 600;
   color: #000000;
+  flex-shrink: 0;
 }
 
-.memberDetails {
-  display: flex;
-  flex-direction: column;
+.memberDetails { 
+  display: flex; 
+  flex-direction: column; 
+  min-width: 0;
 }
 
-.memberName {
-  font-weight: 500;
-  font-size: 14px;
-  color: #000000;
+.memberName { 
+  font-weight: 600; 
+  font-size: 15px; 
+  color: #111827; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.memberTitle {
-  font-size: 12px;
-  color: #6B7280;
+.memberTitle { 
+  font-size: 13px; 
+  color: #6B7280; 
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .roleInfo {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap; 
 }
 
-.badge {
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
+.badge { 
+  padding: 4px 12px; 
+  border-radius: 16px; 
+  font-size: 11px; 
+  font-weight: 500; 
+  white-space: nowrap;
 }
 
-.roleBadge {
-  background-color: #E0EBF9;
-  color: #1E40AF;
+.roleBadge { 
+  background-color: #91B7ED; 
+  color: #1E40AF; 
 }
 
-.youBadge {
-  background-color: #D1FAE5;
-  color: #065F46;
+.youBadge { 
+  background-color: #D1FAE5; 
+  color: #065F46; 
 }
 
-.emailText {
-  font-size: 14px;
-  color: #6B7280;
+.emailText { 
+  font-size: 14px; 
+  color: #6B7280; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* MOBILE LAYOUT FIXES (Scaled-down Table) */
+@media (max-width: 768px) {
+  .contentContainer {
+    padding: 16px 12px; 
+  }
+
+  .mobileTopBar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .menuToggle {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  .breadcrumb {
+    font-size: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .breadcrumbMuted {
+    color: #9CA3AF;
+  }
+
+  .breadcrumbActive {
+    color: #111827;
+    font-weight: 500;
+  }
+
+  .mobileDivider {
+    display: block;
+    border: none;
+    border-top: 1px solid #E5E7EB;
+    margin: 0 -12px 20px -12px; 
+  }
+
+  .teamHeader {
+    align-items: flex-start;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+
+  .pageSubtitle {
+    font-size: 13px;
+    max-width: 220px;
+  }
+
+  .addBtn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .cardTitle {
+    font-size: 20px;
+    padding: 16px 16px 12px 16px;
+  }
+
+  /* --- Squeezed Table Adjustments --- */
+  
+  .tableScrollWrapper {
+    overflow: hidden; 
+  }
+
+  .tableHeader {
+    display: flex;
+    padding: 8px 12px;
+    font-size: 11px; 
+    min-width: 0; 
+  }
+
+  .tableRow {
+    padding: 12px 12px; 
+    min-width: 0;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .memberInfo {
+    gap: 8px; 
+  }
+
+  .memberName {
+    font-size: 13px;
+  }
+
+  .memberTitle {
+    font-size: 11px;
+  }
+
+  .badge {
+    padding: 2px 6px;
+    font-size: 9px;
+  }
+
+  .roleInfo {
+    gap: 4px;
+  }
+
+  /* Completely hide the email column on mobile */
+  .colEmail {
+    display: none !important; 
+  }
+
+  .colActions {
+    flex: 0 0 24px; 
+    margin-left: 0;
+  }
+
+  .actionBtn {
+    font-size: 16px;
+    padding-bottom: 4px;
+  }
 }
