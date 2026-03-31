@@ -272,17 +272,20 @@ export default function DependencyGraph() {
       .filter((edge) => edge.target === selectedTask.id)
       .map((edge) => nodes.find((node) => node.id === edge.source))
       .filter(Boolean)
+      .filter((node) => node.data.status?.toLowerCase() !== "done")
       .map((node) => ({
         id: node.id,
         taskCode: node.data.taskCode,
         title: node.data.title,
       }))
     : [];
+
   const blockingTasks = selectedTask ?
       edges
         .filter((edge) => edge.source === selectedTask.id)
         .map((edge) => nodes.find((node) => node.id === edge.target))
         .filter(Boolean)
+        .filter((node) => node.data.status?.toLowerCase() !== "done")
         .map((node) => ({
           id: node.id,
           taskCode: node.data.taskCode,
@@ -524,34 +527,30 @@ export default function DependencyGraph() {
     }
   }, []);
 
-  // Determine edge styles based on connected node states
+  // apply animations and styling 
   const edgesWithDynamicStyles = useMemo(() => {
     return edges.map((edge) => {
-      // Find nodes connected to this edge
       const sourceNode = nodes.find((n) => n.id === edge.source);
-      const targetNode = nodes.find((n) => n.id === edge.target);
-
-      // Check the states
-      const isSevere =
-        sourceNode?.data?.complexity?.toLowerCase() === "severe" ||
-        targetNode?.data?.complexity?.toLowerCase() === "severe";
+      
+      // check if the source node (where the arrow starts) is severe
+      const isSevere = sourceNode?.data?.complexity?.toLowerCase() === "severe";
         
       const isSourceDone = sourceNode?.data?.status?.toLowerCase() === "done";
 
-      // Determine color/thickness
+      // Determine the color and thickness
       let edgeColor = "#6B7280"; 
       let edgeWidth = 2;
 
       if (isSevere) {
-        edgeColor = "#EF4444"; // Red for severe 
+        edgeColor = "#EF4444"; // Red for severe bottleneck
         edgeWidth = 3;
       } else if (isSourceDone) {
-        edgeColor = "#22C55E"; // Green for completed  
+        edgeColor = "#22C55E"; // Green for completed dependency 
       }
 
       return {
         ...edge,
-        animated: true, // motion animation on
+        animated: true, // Keep the motion animation on
         style: {
           ...edge.style,
           stroke: edgeColor,

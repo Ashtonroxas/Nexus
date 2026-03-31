@@ -19,9 +19,6 @@ function DesktopTaskNode({ id, data, selected }) {
     onDelete,
   } = data || {};
 
-  const isBottleneck = complexity?.toLowerCase() === "severe";
-  const isDone = status?.toLowerCase() === "done"; 
-
   const handleConfirmDelete = async () => {
     await onDelete?.(id);
     handleCloseDeleteModal();
@@ -40,7 +37,7 @@ function DesktopTaskNode({ id, data, selected }) {
 
   return (
     <>
-    <div className={`${styles.taskNode} ${selected ? styles.taskNodeSelected : ""} ${isBottleneck ? styles.taskNodeBottleneck : ""} ${isDone ? styles.taskNodeDone : ""}`}>
+    <div className={`${styles.taskNode} ${selected ? styles.taskNodeSelected : ""}`}>
       <Handle
         type="target"
         position={Position.Left}
