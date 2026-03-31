@@ -1,6 +1,6 @@
 import { Link, NavLink, useLocation, useParams } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, ChevronUp, User, LogOut, PanelLeftClose } from 'lucide-react';
+import { ArrowLeft, ChevronUp, User, LogOut, PanelLeftClose, Bell } from 'lucide-react'; 
 import { signOut } from "firebase/auth";
 import { auth, db } from "../../firebase/firebase";
 import { doc, getDoc } from "firebase/firestore"; 
@@ -72,17 +72,14 @@ function Sidebar({ variant = "desktop", onNavigate }) {
     <div className={wrapperStyling}>
       <div className={styles.sidebarMain}>
         
-        {/* Updated Header Layout */}
         <div className={styles.header}>
           <Link to="/projects" className={styles.logoGroup} onClick={handleNav}>
-            {/* Show logo on the left only for mobile */}
             {variant === "mobile" && (
               <img src={logo} alt="Nexus Logo" className={styles.logoImg} />
             )}
             <span className={styles.brand}>Nexus</span>
           </Link>
           
-          {/* Show Logo on desktop right, or Collapse Icon on mobile right */}
           {variant === "desktop" ? (
             <Link to="/projects" className={styles.logoLink}>
               <img src={logo} alt="Nexus Logo" width="47px" />
@@ -97,7 +94,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
         <hr className={styles.separator} />
 
         { projectSidebar ? (
-          <> {/* Inside Project Menu */}
+          <> 
             <Link to="/projects" className={styles.backLink} onClick={handleNav}>
               <ArrowLeft size={22} strokeWidth={2.5} />
               Back to My Projects
@@ -109,16 +106,6 @@ function Sidebar({ variant = "desktop", onNavigate }) {
 
             <nav className={styles.nav}>
               <NavLink
-                to={`/projects/${projectId}/report`}
-                className={({ isActive }) =>
-                  `${styles.navButton} ${isActive ? styles.active : ""}`
-                }
-                onClick={handleNav}
-              >
-                Overview
-              </NavLink>
-
-              <NavLink
                 to={`/projects/${projectId}`} end
                 className={({ isActive }) =>
                   `${styles.navButton} ${isActive ? styles.active : ""}`
@@ -126,6 +113,16 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                 onClick={handleNav}
               >
                 Dependency Graph
+              </NavLink>
+
+              <NavLink
+                to={`/projects/${projectId}/report`}
+                className={({ isActive }) =>
+                  `${styles.navButton} ${isActive ? styles.active : ""}`
+                }
+                onClick={handleNav}
+              >
+                Risk Report
               </NavLink>
 
               <NavLink
@@ -140,7 +137,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
             </nav>
           </>
         ) : (
-          <> {/* General Menu */}
+          <> 
             <nav className={styles.nav}>
               <NavLink
                 to="/projects"
@@ -151,6 +148,18 @@ function Sidebar({ variant = "desktop", onNavigate }) {
               >
                 My Projects
               </NavLink>
+              
+              {/* Activity Feed is temporarily commented out */}
+              {/* <NavLink
+                to="/activity"
+                className={({ isActive }) => 
+                  `${styles.navButton} ${isActive ? styles.active : ""}`
+                }
+                onClick={handleNav}
+              >
+                <Bell size={18} />
+                Activity Feed
+              </NavLink> */}
             </nav>
           </>
         )}

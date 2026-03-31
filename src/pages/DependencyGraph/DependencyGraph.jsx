@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { 
   ReactFlow, 
   Controls, 
@@ -524,6 +524,47 @@ export default function DependencyGraph() {
     }
   }, []);
 
+  // Determine edge styles based on connected node states
+  const edgesWithDynamicStyles = useMemo(() => {
+    return edges.map((edge) => {
+      // Find nodes connected to this edge
+      const sourceNode = nodes.find((n) => n.id === edge.source);
+      const targetNode = nodes.find((n) => n.id === edge.target);
+
+      // Check the states
+      const isSevere =
+        sourceNode?.data?.complexity?.toLowerCase() === "severe" ||
+        targetNode?.data?.complexity?.toLowerCase() === "severe";
+        
+      const isSourceDone = sourceNode?.data?.status?.toLowerCase() === "done";
+
+      // Determine color/thickness
+      let edgeColor = "#6B7280"; 
+      let edgeWidth = 2;
+
+      if (isSevere) {
+        edgeColor = "#EF4444"; // Red for severe 
+        edgeWidth = 3;
+      } else if (isSourceDone) {
+        edgeColor = "#22C55E"; // Green for completed  
+      }
+
+      return {
+        ...edge,
+        animated: true, // motion animation on
+        style: {
+          ...edge.style,
+          stroke: edgeColor,
+          strokeWidth: edgeWidth,
+        },
+        markerEnd: {
+          ...edge.markerEnd,
+          color: edgeColor, 
+        },
+      };
+    });
+  }, [edges, nodes]);
+
   return (
     <div className={styles.blueprintContainer}>
       <div className={styles.blueprintHeader}>
@@ -638,7 +679,7 @@ export default function DependencyGraph() {
 
         <ReactFlow 
           nodes={nodes} 
-          edges={edges}
+          edges={edgesWithDynamicStyles}
           nodeTypes={nodeTypes} 
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}

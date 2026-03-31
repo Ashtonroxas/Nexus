@@ -19,6 +19,9 @@ function DesktopTaskNode({ id, data, selected }) {
     onDelete,
   } = data || {};
 
+  const isBottleneck = complexity?.toLowerCase() === "severe";
+  const isDone = status?.toLowerCase() === "done"; 
+
   const handleConfirmDelete = async () => {
     await onDelete?.(id);
     handleCloseDeleteModal();
@@ -37,7 +40,7 @@ function DesktopTaskNode({ id, data, selected }) {
 
   return (
     <>
-    <div className={`${styles.taskNode} ${selected ? styles.taskNodeSelected : ""}`}>
+    <div className={`${styles.taskNode} ${selected ? styles.taskNodeSelected : ""} ${isBottleneck ? styles.taskNodeBottleneck : ""} ${isDone ? styles.taskNodeDone : ""}`}>
       <Handle
         type="target"
         position={Position.Left}
@@ -126,6 +129,8 @@ function getStatusClass(status) {
       return styles.statusDone;
     case "in progress":
       return styles.statusInProgress;
+    case "bottleneck":
+      return styles.statusBottleneck;
     case "to do":
     default:
       return styles.statusTodo;
