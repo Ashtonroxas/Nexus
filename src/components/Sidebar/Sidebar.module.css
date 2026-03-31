@@ -19,7 +19,6 @@
   flex: 1;
 }
 
-/* Header matching the mockup */
 .header {
   display: flex;
   align-items: center;
@@ -52,7 +51,6 @@
   letter-spacing: -0.5px;
 }
 
-/* Sidebar toggle button (top right) */
 .collapseBtn {
   background: transparent;
   border: 1px solid transparent;
@@ -100,18 +98,20 @@
   gap: 12px;
 }
 
-/* Floating White Buttons from mockup */
 .navButton {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
   text-decoration: none;
-  text-align: center; /* Centers the text like the mockup */
   padding: 14px;
   border-radius: 8px;
   background: #FFFFFF;
   color: #111827;
   font-weight: 600;
   font-size: 0.95rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Slight shadow to lift off background */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
   border: none;
   transition: all 0.2s ease;
 }
@@ -124,15 +124,13 @@
 .active {
   background-color: var(--active-item-bg);
   color: #111827;
-  box-shadow: none; /* Flat appearance when active */
+  box-shadow: none; 
 }
 
 .active:hover {
   transform: none;
   box-shadow: none;
 }
-
-/* --- Account Section Styles (Preserved) --- */
 
 .sidebarBottom {
   position: relative;
