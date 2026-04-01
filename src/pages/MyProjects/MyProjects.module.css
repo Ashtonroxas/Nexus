@@ -2,28 +2,34 @@ body {
   background-color: var(--background) !important;
 }
 
+/* Mobile Header and title */
+.mobileHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* Action buttons styling */
 #dashboard-buttons {
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 10px;
 }
-
 #dashboard-buttons button {
     border-radius: 15px;
 }
-
 #new-project {
     background-color: #6366F1;
     border-color: #6366F1;
 }
-
 #sort-by {
     background-color: rgba(255, 255, 255, 0.36);
     border-color: #EFE7EB;
     color: #374151;
 }
 
+/* Sort dropdown menu styling */
 .sortDropdown :global(.dropdown-menu) {
   border-radius: 12px;
   border: 1px solid #eee;
@@ -47,18 +53,14 @@ body {
   color: #6366F1;
 }
 
-.mobileHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
+/* Block display on desktop*/
 @media (min-width: 992px) {
   .mobileHeader {
     display: block;
   }
 }
 
+/*Wrap buttons on mobile screens */
 @media(max-width: 991.99px) {
   #dashboard-buttons {
     justify-content: flex-start;
