@@ -12,13 +12,16 @@ function AuthPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const provider = new GoogleAuthProvider();
+      // Initialize sign in with google popup and store result
+      const provider = new GoogleAuthProvider(); 
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
+      // Obtain firestore user
       const userRef = doc(db, "users", user.uid);
       const userSnapshot = await getDoc(userRef);
 
+      // If user does not exist parse google account data and create users collection
       if (!userSnapshot.exists()) {
         await setDoc(userRef, {
           firstName: user.displayName?.split(" ")[0] || "",
@@ -37,13 +40,13 @@ function AuthPage() {
           isActive: true,
         });
       } else {
-        await setDoc(userRef, {
+        await setDoc(userRef, { // otherwise, ensure photo data is up to date
           displayName: user.displayName || "",
           imgURL: user.photoURL || "",
         }, { merge: true });
       }
 
-      navigate("/projects");
+      navigate("/projects"); //redirect to dashboard
     } catch (error) {
       console.error("Google sign-in error: ", error);
     }
@@ -81,7 +84,7 @@ function AuthPage() {
         </div>
       </Col>
 
-      {/* Right panel */}
+      {/* Right panel and image */}
       <Col lg={7} className={`d-none d-lg-flex align-items-center justify-content-center ${styles.rightPanel}`}>
         <img src="/preview.png" alt="Nexus app preview" className={styles.screenshot} />
       </Col>
