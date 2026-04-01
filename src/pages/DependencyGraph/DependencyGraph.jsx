@@ -332,13 +332,14 @@ export default function DependencyGraph() {
       let edgeColor = "#6B7280"; 
       let edgeWidth = 2;
 
-      if (isSevere) {
+      // Check if it's done FIRST
+      if (isSourceDone) {
+        edgeColor = "#22C55E"; // Green for completed dependency 
+        edgeWidth = 2; // Resetting width to standard for completed tasks
+      } else if (isSevere) {
         edgeColor = "#EF4444"; // Red for severe bottleneck
         edgeWidth = 1;
-      } else if (isSourceDone) {
-        edgeColor = "#22C55E"; // Green for completed dependency 
       }
-
       return {
         ...edge,
         animated: true, // Keep the motion animation on
