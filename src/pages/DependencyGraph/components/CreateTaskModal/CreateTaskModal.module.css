@@ -1,3 +1,4 @@
+/* Main styling */
 .overlay {
   position: fixed;
   inset: 0;
@@ -8,6 +9,7 @@
   z-index: 2000;
 }
 
+/* Container styling */
 .modal {
   width: min(430px, 92vw);
   height: auto;
@@ -18,6 +20,7 @@
   overflow: visible;
 }
 
+/* Header area information styling */
 .header {
   display: flex;
   align-items: center;
@@ -54,6 +57,7 @@
   color: #9CA3AF;
 }
 
+/* Form field layout organization styling */
 .form {
   padding: 12px 16px 16px;
 }
@@ -71,6 +75,24 @@
   color: #111827;
 }
 
+.fieldRow {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  align-items: center;
+  column-gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fieldRowLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+/* Text inputs */
 .textarea,
 .compactInput {
   width: 100%;
@@ -95,23 +117,13 @@
   font-size: 0.9rem;
 }
 
-.fieldRow {
-  display: grid;
-  grid-template-columns: 92px 1fr;
-  align-items: center;
-  column-gap: 10px;
-  margin-bottom: 10px;
+.compactInput {
+  height: 36px;
+  padding: 0 10px;
+  font-size: 0.88rem;
 }
 
-.fieldRowLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #111827;
-}
-
+/* Icons for field indicators */
 .rowIconPurple {
   color: #6366F1;
   flex-shrink: 0;
@@ -132,13 +144,7 @@
   flex-shrink: 0;
 }
 
-.compactInput {
-  height: 36px;
-  padding: 0 10px;
-  font-size: 0.88rem;
-}
-
-/* NEW: custom dropdown styling */
+/* Custon dropdown stylings */
 .dropdownContainer {
   position: relative;
 }
@@ -194,7 +200,7 @@
   background: #F8FAFC;
 }
 
-/* Status dots */
+/* Status dots and stylings */
 .statusDot {
   width: 8px;
   height: 8px;
@@ -214,7 +220,7 @@
   background: #28AF60;
 }
 
-/* Complexity pills */
+/* Complexity pills and stylings */
 .complexityPill {
   display: inline-flex;
   align-items: center;
@@ -246,6 +252,7 @@
   color: #991B1B;
 }
 
+/* Action button stylings */
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -280,6 +287,7 @@
   cursor: not-allowed;
 }
 
+/* Size adjustments for smaller screens for responsive modal */
 @media (max-width: 640px) {
   .modal {
     width: 94vw;
