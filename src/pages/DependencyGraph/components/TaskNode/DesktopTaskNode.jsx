@@ -9,6 +9,7 @@ function DesktopTaskNode({ id, data, selected }) {
   const handleShowDeleteModal = () => setShowDeleteModal(true);
   const handleCloseDeleteModal = () => setShowDeleteModal(false);
 
+  // Parsing task node data from props
   const {
     taskCode = "TASK-000",
     title = "Untitled Task",
@@ -19,11 +20,13 @@ function DesktopTaskNode({ id, data, selected }) {
     onDelete,
   } = data || {};
 
+  // delete task functionality - only present on desktop tasks
   const handleConfirmDelete = async () => {
     await onDelete?.(id);
     handleCloseDeleteModal();
   }
 
+  // helper function to format date
   const formatDate = (dateString) => {
     if (!dateString) return "";
 
@@ -38,6 +41,7 @@ function DesktopTaskNode({ id, data, selected }) {
   return (
     <>
     <div className={`${styles.taskNode} ${selected ? styles.taskNodeSelected : ""}`}>
+      {/* Renders left bubble for arrow attachments for when node is destination */}
       <Handle
         type="target"
         position={Position.Left}
@@ -46,7 +50,7 @@ function DesktopTaskNode({ id, data, selected }) {
 
       <div className={styles.taskCodeRow}>
         <span className={styles.taskCode}>{taskCode}</span>
-        
+        {/* Task delete button functionality */}
         <X
           size={20}
           color="#6B7280"
@@ -60,6 +64,7 @@ function DesktopTaskNode({ id, data, selected }) {
 
       </div>
 
+      {/* Information display on task node */}
       <div className={styles.taskTitle}>
         {title}
       </div>
@@ -86,6 +91,7 @@ function DesktopTaskNode({ id, data, selected }) {
         </div>
       </div>
 
+      {/* Renders right bubble for arrow attachments when node is source */}
       <Handle
         type="source"
         position={Position.Right}
@@ -93,6 +99,7 @@ function DesktopTaskNode({ id, data, selected }) {
       />
     </div>
 
+    {/* Conditional rendering for confirmation delete modal */}
     <ConfirmModal
           show={showDeleteModal}
           onHide={handleCloseDeleteModal} 
@@ -106,6 +113,11 @@ function DesktopTaskNode({ id, data, selected }) {
   );
 }
 
+/**
+ * Helper function to parse node complexity and return the classNamee
+ * @param {string} complexity 
+ * @returns string classname
+ */
 function getComplexityClass(complexity) {
   switch (complexity.toLowerCase()) {
     case "severe":
@@ -120,6 +132,11 @@ function getComplexityClass(complexity) {
   }
 }
 
+/**
+ * Helper function to parse node status and return the classNamee
+ * @param {string} status 
+ * @returns string classname
+ */
 function getStatusClass(status) {
   switch (status.toLowerCase()) {
     case "done":

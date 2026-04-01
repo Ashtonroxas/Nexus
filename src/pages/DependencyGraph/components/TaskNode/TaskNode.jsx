@@ -3,6 +3,7 @@ import DesktopTaskNode from "./DesktopTaskNode";
 import MobileTaskNode from "./MobileTaskNode";
 
 function TaskNode(props) {
+    // UI responsiveness listener for less than large screens
     const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
 
     useEffect(() => {
@@ -18,8 +19,8 @@ function TaskNode(props) {
     }, []);
 
     return isMobile 
-            ? <MobileTaskNode {...props} /> 
-            : <DesktopTaskNode {...props} />
+            ? <MobileTaskNode {...props} /> // returns abbreviated circular task node
+            : <DesktopTaskNode {...props} /> // return full rectangular desktop node
 }
 
 export default TaskNode;
