@@ -214,8 +214,8 @@ function ProfilePage() {
                   variant="light"
                   onClick={handleEdit}
                   className={styles.editButton}>
-                  <span className="d-none d-md-inline"> Edit Profile </span>
-                  <Pencil size={18} className="d-md-none" />
+                  <span className="d-none d-lg-inline"> Edit Profile </span>
+                  <Pencil size={18} className="d-lg-none" />
                 </Button>
               ) : ( // If editing, displays cancel button and if any change is detected, renders save button
                     // applies proper css styles for lighter field inputs to indicate editability
