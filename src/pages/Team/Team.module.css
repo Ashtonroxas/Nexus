@@ -236,6 +236,7 @@
   color: #374151;
   cursor: pointer;
   border-radius: 10px;
+  text-decoration: none;
 }
 
 .menuItem:hover {
@@ -332,7 +333,7 @@
   /* --- Squeezed Table Adjustments --- */
   
   .tableScrollWrapper {
-    overflow: hidden; 
+    overflow: visible;
   }
 
   .tableHeader {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useOutletContext } from "react-router-dom"; 
 import { useAuth } from "../../firebase/AuthContext";
 import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
@@ -35,10 +35,9 @@ function Team() {
   const handleCloseAddModal = () => setShowAddModal(false);
   const handleShowAddModal = () => setShowAddModal(true);
 
-  // Placeholder confirm handler for adding a member
-  const handleConfirmAdd = async ({ nameOrEmail, role }) => {
-    if (!nameOrEmail) return;
-
+  const handleConfirmAdd = async ({ user, role }) => {
+    if (!user) return;
+    alert(`Adding ${user.displayName} as ${role}`);
     handleCloseAddModal();
   };
   
@@ -47,6 +46,9 @@ function Team() {
   
   const [members, setMembers] = useState([]);
   const [projectName, setProjectName] = useState("Loading...");
+
+  // derive the current user's role from the members list
+  const currentUserRole = members.find((m) => m.userId === currentUser?.uid)?.role ?? "member";
 
   // Fetch project name for the breadcrumb
   useEffect(() => {
@@ -84,6 +86,13 @@ function Team() {
           };
         })
       );
+
+      const roleOrder = { owner: 0, admin: 1, member: 2 };
+      memberDetails.sort((a, b) => {
+        const roleDiff = (roleOrder[a.role] ?? 3) - (roleOrder[b.role] ?? 3);
+        if (roleDiff !== 0) return roleDiff;
+        return a.displayName.localeCompare(b.displayName);
+      });
 
       setMembers(memberDetails);
     });
@@ -153,9 +162,7 @@ function Team() {
                   
                   <div className={`${styles.colRole} ${styles.roleInfo}`}>
                     <span className={`${styles.badge} ${styles.roleBadge}`}>
-                      {member.role.toLowerCase() === 'owner' 
-                        ? 'Admin' 
-                        : member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                      {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                     </span>
                     {isYou && <span className={`${styles.badge} ${styles.youBadge}`}>You</span>}
                   </div>
@@ -165,7 +172,13 @@ function Team() {
                   </div>
 
                   <div className={styles.colActions}>
-                    <TeamMenu memberEmail={member.email} />
+                    <TeamMenu
+                      memberId={member.userId}
+                      memberEmail={member.email}
+                      memberRole={member.role}
+                      currentUserRole={currentUserRole}
+                      isYou={isYou}
+                    />
                   </div>
                 </div>
               );
@@ -183,7 +196,10 @@ function Team() {
         onConfirm={handleConfirmAdd}
         title="Add Member"
         confirmText="Send Invite"
-        cancelText="Cancel"/>
+        cancelText="Cancel"
+        // exclude existing members
+        excludeUids={new Set(members.map((m) => m.userId))}
+      />
     </div>
   );
 }

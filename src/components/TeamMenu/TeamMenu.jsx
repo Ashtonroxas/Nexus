@@ -2,7 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Mail, UserCheck, UserMinus } from "lucide-react";
 import styles from '../../pages/Team/Team.module.css';
 
-const TeamMenu = ({ memberEmail }) => {
+const TeamMenu = ({ memberId, memberEmail, memberRole, currentUserRole, isYou }) => {
+    const roleOrder = { owner: 0, admin: 1, member: 2 };
+
+    // can manage = can remove or change role of this member
+    const canManage = !isYou && roleOrder[currentUserRole] < roleOrder[memberRole] && (currentUserRole === "owner" || currentUserRole === "admin");
+
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -20,7 +25,6 @@ const TeamMenu = ({ memberEmail }) => {
 
     }, [isOpen]);
 
-    // Change alerts after figuring out how to work with firebase
     return (
 
         <div className={styles.colActions} style={{ position: 'relative' }}>
@@ -35,21 +39,20 @@ const TeamMenu = ({ memberEmail }) => {
 
         {isOpen && (
             <div className={styles.actionMenu} ref={menuRef}>
-                {/* Email */}
-                <div className={styles.menuItem}>
+                <a className={styles.menuItem} href={`mailto:${memberEmail}`}>
                     <Mail size={16} className={styles.menuIcon} />
-                        <span>{memberEmail}</span>
-                </div>
-                {/* Change Role */}
-                <div className={styles.menuItem} onClick={() => alert("Change Role Clicked")}>
-                    <UserCheck size={16} className={styles.menuIcon} />
-                    <span>Change role</span>
-                </div>
-                {/* Remove Member */}
-                <div className={`${styles.menuItem} ${styles.removeText}`} onClick={() => alert("Remove Member Clicked")}>
-                    <UserMinus size={16} className={styles.menuIcon} />
-                    <span>Remove Member</span>
-                </div>
+                    <span>{memberEmail}</span>
+                </a>
+                {canManage && <>
+                    <div className={styles.menuItem} onClick={() => alert("Change Role Clicked")}>
+                        <UserCheck size={16} className={styles.menuIcon} />
+                        <span>Change role</span>
+                    </div>
+                    <div className={`${styles.menuItem} ${styles.removeText}`} onClick={() => alert("Remove Member Clicked")}>
+                        <UserMinus size={16} className={styles.menuIcon} />
+                        <span>Remove Member</span>
+                    </div>
+                </>}
             </div>
         )}
     </div>
