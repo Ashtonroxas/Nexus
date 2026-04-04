@@ -5,6 +5,8 @@ import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { Menu } from "lucide-react"; 
 import styles from './Team.module.css';
+import AddModal from "../../components/AddModal/AddModal";
+import TeamMenu from "../../components/TeamMenu/TeamMenu.jsx";
 
 // Helper to generate initials from a display name
 const getInitials = (name) => {
@@ -25,6 +27,20 @@ const getAvatarColor = (name) => {
 function Team() {
   const { projectId } = useParams();
   const { currentUser } = useAuth();
+
+  // State for Add Member Modal
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Handlers for Add Member Modal
+  const handleCloseAddModal = () => setShowAddModal(false);
+  const handleShowAddModal = () => setShowAddModal(true);
+
+  // Placeholder confirm handler for adding a member
+  const handleConfirmAdd = async ({ nameOrEmail, role }) => {
+    if (!nameOrEmail) return;
+
+    handleCloseAddModal();
+  };
   
   // Grab the toggle function from the Layout context
   const { toggleSidebar } = useOutletContext();
@@ -98,7 +114,7 @@ function Team() {
           <p className={styles.pageSubtitle}>Manage members and roles for this project</p>
         </div>
         
-        <button className={styles.addBtn} onClick={() => alert("Invite flow coming soon!")}>
+        <button className={styles.addBtn} onClick={handleShowAddModal}>
           + Add Member
         </button>
       </header>
@@ -149,9 +165,7 @@ function Team() {
                   </div>
 
                   <div className={styles.colActions}>
-                    <button className={styles.actionBtn} aria-label="Member actions">
-                      ...
-                    </button>
+                    <TeamMenu memberEmail={member.email} />
                   </div>
                 </div>
               );
@@ -163,7 +177,13 @@ function Team() {
           </div>
         </div>
       </div>
-      
+      <AddModal
+        show={showAddModal}
+        onHide={handleCloseAddModal}
+        onConfirm={handleConfirmAdd}
+        title="Add Member"
+        confirmText="Send Invite"
+        cancelText="Cancel"/>
     </div>
   );
 }
