@@ -227,11 +227,6 @@
   position: absolute;
   top: 20px;
   right: 20px;
-  background-color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border: 1px solid var(--outlines);
   z-index: 10;
   display: flex;
   gap: 10px;
@@ -325,6 +320,5 @@
   .floatingToolbar {
     top: 12px;
     right: 12px;
-    padding: 8px 10px;
   }
 }
