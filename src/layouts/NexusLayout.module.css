@@ -1,3 +1,4 @@
+/* Main (middle) content styling for layout */
 .content {
     background-color: var(--background);
     min-width: 0;
@@ -9,12 +10,6 @@
     min-height: 100vh;
 }
 
-.sidebarColumn {
-    width: 280px;
-    flex: 0 0 280px;
-    display: none;
-}
-
 .contentColumn {
     flex: 1 1 auto;
     min-width: 0;
@@ -22,6 +17,14 @@
         
 }
 
+/* Sidebar column dimensions for layout */
+.sidebarColumn {
+    width: 280px;
+    flex: 0 0 280px;
+    display: none;
+}
+
+/* Icon styling for mobile screen hamburger menu*/
 .hamburger {
     border: 4px solid #CCCCCC;
     display: inline-flex;
@@ -34,6 +37,7 @@
     width: 280px !important;
 }
 
+/* Desktop screen sidebar adjustments*/
 @media (min-width: 992px) {
     .sidebarColumn {
         display: block;

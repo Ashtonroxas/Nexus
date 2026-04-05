@@ -9,16 +9,18 @@ function ConfirmModal({
   message,
   confirmText,
   cancelText,
-  confirmVariant = "danger",
-}) {
+  }) {
   return (
     <Modal show={show} onHide={onHide} centered className={styles.modalRoot}>
+      {/* Header information */}
       <Modal.Header closeButton>
         <Modal.Title className={styles.modalTitle}>{title}</Modal.Title>
       </Modal.Header>
 
+      {/* Rendering custom prop message */}
       <Modal.Body>{message}</Modal.Body>
 
+      {/* Action button footer sections */}
       <Modal.Footer>
         <Button className={styles.cancelButton} onClick={onHide}>
           {cancelText}

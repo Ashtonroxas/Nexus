@@ -1,3 +1,4 @@
+/* Details panel layouts */
 .taskDetailsPanel {
   display: flex;
   flex-direction: column;
@@ -12,6 +13,7 @@
   margin: 0 auto 4px;
 }
 
+/* Panel header area */
 .topRow {
   display: flex;
   justify-content: space-between;
@@ -35,6 +37,7 @@
   color: #111827;
 }
 
+/* Text inputs */
 .titleInput {
   border: none;
   outline: none;
@@ -68,6 +71,7 @@
   box-shadow: none;
 }
 
+/* Grid for dropdown menus and fields */
 .infoGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -89,6 +93,7 @@
   color: #6B7280;
 }
 
+/* Select menu stylings */
 .selectWrap {
   display: inline-flex;
   align-items: center;
@@ -99,7 +104,31 @@
   background: #FFFFFF;
   padding: 3px 8px;
 }
+.statusSelect {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 11px;
+  line-height: 1;
+  color: #111827;
+  padding: 0 14px 0 0;
+  appearance: none;
+  cursor: pointer;
+}
+.pillSelect {
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1;
+  padding: 5px 22px 5px 10px;
+  width: fit-content;
+  border: 1px solid transparent;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
 
+/* Status display styling */
 .statusDot {
   width: 7px;
   height: 7px;
@@ -119,32 +148,7 @@
   background: var(--done-color);
 }
 
-.statusSelect {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 11px;
-  line-height: 1;
-  color: #111827;
-  padding: 0 14px 0 0;
-  appearance: none;
-  cursor: pointer;
-}
-
-.pillSelect {
-  border-radius: 999px;
-  font-weight: 500;
-  font-size: 11px;
-  line-height: 1;
-  padding: 5px 22px 5px 10px;
-  width: fit-content;
-  border: 1px solid transparent;
-  outline: none;
-  appearance: none;
-  cursor: pointer;
-}
-
-
+/* Complexity display styling */
 .lowPill {
   background: #DDF3DF;
   color: #54A964;
@@ -169,6 +173,7 @@
   border-color: #EAB1B4;
 }
 
+/* Inline information stylings */
 .assigneeRow,
 .dateRow {
   display: inline-flex;
@@ -216,6 +221,7 @@
   flex-shrink: 0;
 }
 
+/* Dependency sections */
 .linkSection {
   display: flex;
   flex-direction: column;
@@ -260,6 +266,7 @@
   color: #9CA3AF;
 }
 
+/* Size adjustments for mobile screens */
 @media (max-width: 767px) {
   .titleInput {
     font-size: 20px;

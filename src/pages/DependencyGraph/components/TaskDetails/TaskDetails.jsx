@@ -10,6 +10,7 @@ function TaskDetails({
   blocking = [],
   isMobile = false,
 }) {
+  // UI state handlers for task details
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("To Do");
@@ -17,6 +18,8 @@ function TaskDetails({
   const [assigneeName, setAssigneeName] = useState("");
   const [dueDate, setDueDate] = useState("");
 
+  // Lifecycle listener for changes in task information to update
+  // sidebar/bottom sheet automatically
   useEffect(() => {
     if (!task) return;
 
@@ -30,40 +33,50 @@ function TaskDetails({
 
   if (!task) return null;
 
+  // Updater
   const saveField = (updates) => {
     onSave?.(task.id, updates);
   };
 
+  // -- Group of helper function to save fields at save events -- //
+  
+  // Save when user clicks out of title
   const handleTitleBlur = () => {
     saveField({ title });
   };
 
+  // Save when user clicks out of description
   const handleDescriptionBlur = () => {
     saveField({ description });
   };
 
+  // Save when user clicks out of assignee
   const handleAssigneeBlur = () => {
     saveField({ assigneeName });
   };
 
+  // update date
   const handleDateChange = (e) => {
     const value = e.target.value;
     setDueDate(value);
     saveField({ dueDate: value });
   };
 
+  // update status
   const handleStatusChange = (e) => {
     const value = e.target.value;
     setStatus(value);
     saveField({ status: value });
   };
 
+  // update complexity
   const handleComplexityChange = (e) => {
     const value = e.target.value;
     setComplexity(value);
     saveField({ complexity: value });
   };
 
+  // update assignee initialis based on name change
   const liveAssigneeInitials =
     assigneeName.trim() !== ""
       ? assigneeName
@@ -77,11 +90,12 @@ function TaskDetails({
 
   return (
     <div className={styles.taskDetailsPanel}>
+      {/* If mobile, render bottom sheet styling */}
       {isMobile && <div className={styles.bottomSheetHandle} />}
 
       <div className={styles.topRow}>
         <div className={styles.taskCode}>{task.taskCode}</div>
-
+        {/* Close taskbar button */}
         <X
           size={20}
           className={styles.closeIcon}
@@ -93,6 +107,7 @@ function TaskDetails({
         />
       </div>
 
+      {/* Editable task title */}
       <input
         className={styles.titleInput}
         value={title}
@@ -101,6 +116,7 @@ function TaskDetails({
         placeholder="Untitled Task"
       />
 
+      {/* Editable task description */}
       <textarea
         className={styles.descriptionInput}
         value={description}
@@ -109,11 +125,14 @@ function TaskDetails({
         placeholder="Add task description"
       />
 
+
       <div className={styles.infoGrid}>
         <div className={styles.infoField}>
+          {/* Editable status */}
           <div className={styles.infoLabel}>Status</div>
 
           <div className={styles.selectWrap}>
+            {/* Check status and return appropriate styling */}
             <span
               className={`${styles.statusDot} ${
                 status === "Done"
@@ -123,6 +142,7 @@ function TaskDetails({
                   : styles.statusTodo
               }`}
             />
+            {/* Dropdown menu for status change */}
             <select
               className={styles.statusSelect}
               value={status}
@@ -137,7 +157,7 @@ function TaskDetails({
 
         <div className={styles.infoField}>
           <div className={styles.infoLabel}>Complexity</div>
-
+          {/* Determine complexity and return appropriate styling */}
           <select
             className={`${styles.pillSelect} ${
               complexity === "Severe"
@@ -151,6 +171,7 @@ function TaskDetails({
             value={complexity}
             onChange={handleComplexityChange}
           >
+            {/* Dropdown menu for complexity */}
             <option>Low</option>
             <option>Medium</option>
             <option>High</option>
@@ -159,6 +180,7 @@ function TaskDetails({
         </div>
 
         <div className={styles.infoField}>
+          {/* Editable assignee field & initial bubble */}
           <div className={styles.infoLabel}>Assignee</div>
 
           <div className={styles.assigneeRow}>
@@ -177,7 +199,8 @@ function TaskDetails({
         </div>
 
         <div className={styles.infoField}>
-          <div className={styles.infoLabel}>Due Date</div>
+          {/* Selectable date using calendar input */}
+          <div className={styles.infoLabel}>Deadline</div>
 
           <label className={styles.dateRow}>
             <Calendar size={14} className={styles.dateIcon} />
@@ -191,6 +214,7 @@ function TaskDetails({
         </div>
       </div>
 
+      {/* Render blocking tasks for selected task */}
       <div className={styles.linkSection}>
         <div className={styles.linkLabel}>Blocked By</div>
 
@@ -207,6 +231,7 @@ function TaskDetails({
         )}
       </div>
 
+      {/* Render blocked tasks by currently selected task */}
       <div className={styles.linkSection}>
         <div className={styles.linkLabel}>Blocking</div>
 

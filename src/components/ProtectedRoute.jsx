@@ -4,6 +4,7 @@ import { useAuth } from "../firebase/AuthContext";
 function ProtectedRoute({ children }) {
     const { currentUser, authLoading } = useAuth();
 
+    // Protection against unauthenticated users
     if (authLoading) return <div>Loading...</div>;
     if (!currentUser) return <Navigate to="/login" replace />
 

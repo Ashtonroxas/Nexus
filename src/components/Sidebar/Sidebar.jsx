@@ -11,17 +11,21 @@ import defaultimg from "../../assets/default-img.png";
 
 function Sidebar({ variant = "desktop", onNavigate }) {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+
   const { pathname } = useLocation();
   const { projectId} = useParams();
   const { currentUser } = useAuth();
+
   const [sidebarUser, setSidebarUser] = useState({
     displayName: "User",
     imgURL: defaultimg,
   });
   const accountRef = useRef(null);
+  // used to determine if project or generic sidebar will be rendered
   const projectSidebar = pathname.startsWith("/projects/") && !!projectId;
   const wrapperStyling = `${styles.sidebar} p-3 h-100`
 
+  // Retrieve current user information from firestore for account shortcut button at sidebar bottom
   useEffect(() => {
     const loadSidebarUser = async () => {
       if (!currentUser) return;
@@ -33,7 +37,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
         if (!userSnapshot.exists()) return;
 
         const data = userSnapshot.data();
-
+        // sets username and image
         setSidebarUser({
           displayName: data.displayName || currentUser.displayName || "User",
           imgURL: data.imgURL || defaultimg,
@@ -46,14 +50,16 @@ function Sidebar({ variant = "desktop", onNavigate }) {
     loadSidebarUser();
   }, [currentUser]);
 
+  // Helper functions for log out and navigation buttons
   const handleLogout = async () => {
     await signOut(auth);
   }
-
   const handleNav = () => {
     if (onNavigate) onNavigate();
   }
 
+  // Click outside listener to close sidebar when other areas are clicked
+  // Used on mobile screens so user isnt limited to x button
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (accountRef.current && !accountRef.current.contains(event.target)) {
@@ -73,6 +79,8 @@ function Sidebar({ variant = "desktop", onNavigate }) {
       <div className={styles.sidebarMain}>
         
         <div className={styles.header}>
+          {/* Displays logo and header text */}
+          {/* mobile and desktop differentiation in header layouts */}
           <Link to="/projects" className={styles.logoGroup} onClick={handleNav}>
             {variant === "mobile" && (
               <img src={logo} alt="Nexus Logo" className={styles.logoImg} />
@@ -95,6 +103,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
 
         { projectSidebar ? (
           <> 
+            {/* Back to project dashboard navigation option when inside specific project controls */}
             <Link to="/projects" className={styles.backLink} onClick={handleNav}>
               <ArrowLeft size={22} strokeWidth={2.5} />
               Back to My Projects
@@ -105,6 +114,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
             <hr className={styles.separator} />
 
             <nav className={styles.nav}>
+              {/* Navigates to project's respective dependency graph */}
               <NavLink
                 to={`/projects/${projectId}`} end
                 className={({ isActive }) =>
@@ -115,6 +125,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                 Dependency Graph
               </NavLink>
 
+              {/* Navigates to project's respective risk report page */}
               <NavLink
                 to={`/projects/${projectId}/report`}
                 className={({ isActive }) =>
@@ -125,6 +136,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                 Risk Report
               </NavLink>
 
+              {/* Navigates to project's respective teams page */}
               <NavLink
                 to={`/projects/${projectId}/team`}
                 className={({ isActive }) => 
@@ -171,6 +183,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
           className={styles.accountButton}
           onClick={() => setShowAccountMenu((prev) => !prev)}
         >
+          {/* User button at bottom of sidebar from parsed firestore user data */}
           <div className={styles.accountInfo}>
             <img src={sidebarUser.imgURL}
               alt="Profile Image"
@@ -185,6 +198,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
             />
         </button>
 
+        {/* Conditional rendering for profile/signout popup menu */}
         {showAccountMenu && (
           <div className={styles.accountMenu}>
             <NavLink
