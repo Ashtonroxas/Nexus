@@ -156,8 +156,8 @@ function MyProjects() {
               <p>
                 View and manage all your projects • 
                 {searchTerm.trim()
-                  ? `${filteredProjects.length} matching project${filteredProjects.length !== 1 ? "s" : ""}`
-                  : `${numProjects} active project${numProjects !== 1 ? "s" : ""}`}
+                  ? ` ${filteredProjects.length} matching project${filteredProjects.length !== 1 ? "s" : ""}`
+                  : ` ${numProjects} active project${numProjects !== 1 ? "s" : ""}`}
                   </p>
             </div>
           </div>
