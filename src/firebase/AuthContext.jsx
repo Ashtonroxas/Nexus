@@ -6,8 +6,10 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
-    const [authLoading, setAuthLoading] = useState(true);
+    // Used to update user on status while waiting in case of auth delay
+    const [authLoading, setAuthLoading] = useState(true); 
 
+    // Store user and auth status
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
@@ -18,12 +20,14 @@ export function AuthProvider({ children }) {
     }, []);
 
     return (
+        // Pass auth'd user and loading status to child components
         <AuthContext.Provider value={{ currentUser, authLoading }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
+// Custom hook to return auth'd user and loading status
 export function useAuth() {
     return useContext(AuthContext);
 }

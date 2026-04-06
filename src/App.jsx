@@ -13,7 +13,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<AuthPage />} />
-        <Route element={
+        <Route element={ /* Make sure layout is only displayed for authenticated users */
           <ProtectedRoute>
             <NexusLayout />
           </ProtectedRoute>

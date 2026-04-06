@@ -22,17 +22,22 @@ import { db } from "../../firebase/firebase";
 function MyProjects() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Header caption
   const [projects, setProjects] = useState([]);
-  const numProjects = projects.length; // Placeholder for the number of projects
+  const numProjects = projects.length;
+
   const [sortBy, setSortBy] = useState("recent");
-  const { menuButton } = useOutletContext();
-  const { currentUser } = useAuth();
+  const { menuButton } = useOutletContext(); // menu components passed from Layout
+  const { currentUser } = useAuth(); // custom hook from firebase auth to obtain user
+
+  // Query and parse all user's projects
   useEffect(() => {
     if (!currentUser) return;
 
     const q = query(
       collection(db, "projects"),
-      where("ownerId", "==", currentUser.uid)
+      where("ownerId", "==", currentUser.uid) // Get all owned projects (TODO: changed to all membered projects)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -59,6 +64,7 @@ function MyProjects() {
     return () => unsubscribe();
   }, []);
 
+  // Create new project and store it in firestore with default initializations
   const handleNewProject = async () => {
     try {
       if (!currentUser) return;
@@ -87,6 +93,7 @@ function MyProjects() {
     }
   };
 
+  // Remove specific project collection from firestore
   const handleDeleteProject = async (projectId) => {
     try {
       await deleteDoc(doc(db, "projects", projectId));
@@ -95,11 +102,12 @@ function MyProjects() {
     }
   };
 
+  // Custom sorting function based on deadline, recency, progress
   const sortedProjects = [...projects].sort((a, b) => {
     if (sortBy === "dueDate") {
       return (
         (a.dueDate ? a.dueDate.getTime() : Infinity) - 
-        (b.dueDate ? b.dueDate.getTime() : Infinity)
+        (b.dueDate ? b.dueDate.getTime() : Infinity) // unspecified deadlines treated as far into future
       );
     }
     if (sortBy === "recent") {
@@ -112,6 +120,7 @@ function MyProjects() {
     return 0;
   });
 
+  // Handling searching functionality
   const handleSearch = (e) => {
     e.preventDefault();
     console.log("Searching for:", searchTerm);
@@ -119,6 +128,7 @@ function MyProjects() {
 
   return (
     <div className="d-flex flex-column">
+      {/* Top bar - search on desktop*/}
       <Row className="p-3 order-2 order-lg-1">
         <Form onSubmit={(e) => handleSearch(e)}>
           <Form.Control
@@ -131,6 +141,7 @@ function MyProjects() {
           />
         </Form>
       </Row>
+      {/* Metadata column - displays number of active projects */}
       <Row className="p-3 order-1 order-lg-2">
         <Col xs={12} lg>
           <div className={styles.mobileHeader}>
@@ -141,6 +152,8 @@ function MyProjects() {
             </div>
           </div>
         </Col>
+        
+        {/* Action buttons - sort by and New Project */}
         <Col xs={12} lg="auto" id={styles["dashboard-buttons"]}>
           <div className={styles.sortDropdown}>
             <Dropdown>
@@ -167,10 +180,11 @@ function MyProjects() {
           </Button>
         </Col>
       </Row>
+      {/* Rendering parsed project information for user */}
       <Row className="p-3 gap-3 justify-content-evenly justify-content-md-start order-3">
         {sortedProjects.map((project) => {
           const currentUserId = currentUser?.uid;
-          const canDelete = project.owner === currentUserId;
+          const canDelete = project.owner === currentUserId; //verify user priveleges
 
           return (
             <ProjectCard 

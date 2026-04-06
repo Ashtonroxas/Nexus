@@ -13,11 +13,12 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
       ? Math.round((project.completedTasks / project.totalTasks) * 100)
       : 0;
 
+  // status tracking for delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
   const handleCloseDeleteModal = () => setShowDeleteModal(false);
   const handleShowDeleteModal = () => setShowDeleteModal(true);
 
+  // updating firestore from passed prop function
   const handleConfirmDelete = async () => {
     await onDelete?.(project.id);
     handleCloseDeleteModal();
@@ -25,11 +26,11 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
 
   return (
     <>
-      <MotionCol layout transition = {{layout: {duration: 0.4, ease: "easeInOut"}}}
+      <MotionCol layout transition = {{layout: {duration: 0.4, ease: "easeInOut"}}} //transition for sorting animation
         id={styles["project-card"]} className="rounded-4 p-4" onClick={onClick} role="button">
         <div className="d-flex justify-content-between">
           <CheckSquare size={50} color={project.color} />
-          {canDelete && (
+          {canDelete && ( //conditional rendering of delete button
             <X size={25}
                color="#EF4444"
                role="button"
@@ -41,7 +42,7 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
             />
           )}
         </div>
-
+        {/* Project name and description rows */}
         <div className="mb-5 mt-3" style={{ height: 70 }}>
           <h5 className="fw-bold mb-3">{project.name}</h5>
           <p className="text-muted small">
@@ -51,6 +52,7 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
           </p>
         </div>
 
+        {/* Calculated progress and bar components */}
         <div className="d-flex justify-content-between">
           <span className="text-muted small">Progress</span>
           <span className="text-muted small">{progress}%</span>
@@ -65,6 +67,7 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
 
         <hr />
 
+        {/* Metadata row on deadlines and team members w/ icons */}
         <div className="d-flex justify-content-between text-muted small">
           <span><Users size={16} className="me-1" />{project.numMembers}</span>
           <span>
@@ -80,6 +83,7 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
         </div>
       </MotionCol>
 
+      {/* Conditional rednering confirmation modal */}
       <ConfirmModal
         show={showDeleteModal}
         onHide={handleCloseDeleteModal}

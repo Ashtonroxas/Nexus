@@ -1,7 +1,14 @@
+/* Container stylings */
 .content {
   max-width: 400px;
   width: 100%;
 }
+
+.rightPanel {
+  background: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 55%, #C7D2FE 100%);
+}
+
+/* Header and brands */
 
 .logoText {
   font-size: 1.35rem;
@@ -17,6 +24,7 @@
   margin-bottom: 1rem;
 }
 
+/* Button stylings */
 .googleBtn {
   background-color: #fff !important;
   border: 1.5px solid #D1D5DB !important;
@@ -25,7 +33,6 @@
   font-weight: 500;
   box-shadow: none !important;
 }
-
 .googleBtn:hover,
 .googleBtn:focus,
 .googleBtn:active {
@@ -33,6 +40,8 @@
   border-color: #9CA3AF !important;
   color: #111111 !important;
 }
+
+/* Link stylings */
 
 .terms {
   font-size: 0.82rem;
@@ -48,10 +57,7 @@
   text-decoration: underline;
 }
 
-.rightPanel {
-  background: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 55%, #C7D2FE 100%);
-}
-
+/* Right project snapshot */
 .screenshot {
   width: 90%;
   border-radius: 12px;

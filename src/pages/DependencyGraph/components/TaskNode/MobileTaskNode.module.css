@@ -1,3 +1,4 @@
+/* Mobile node container */
 .mobileNodeWrapper {
   display: flex;
   flex-direction: column;
@@ -6,6 +7,7 @@
   width: 72px;
 }
 
+/* Styling the individual shape node */
 .mobileNodeCircle {
   width: 80px;
   height: 80px;
@@ -19,28 +21,28 @@
   box-shadow: 0 2px 8px #10182814;
 }
 
+/* Selected shadowing when clicked */
 .mobileNodeCircleSelected {
   box-shadow: 0 0 0 2px #6366F1;
 }
 
+/* Status styling */
 .statusDot {
   width: 12px;
   height: 12px;
   border-radius: 999px;
 }
-
 .statusTodo {
   background-color: var(--todo-color);
 }
-
 .statusInProgress {
   background-color: var(--inprogress-color);
 }
-
 .statusDone {
   background-color: var(--done-color);
 }
 
+/* Node information */
 .taskCodeLabel {
   margin-top: 8px;
   font-size: 12px;
@@ -48,14 +50,12 @@
   color: #111827;
   text-align: center;
 }
-
 .handle {
   width: 10px;
   height: 10px;
   background: #6B7280;
   border: 2px solid #FFFFFF;
 }
-
 .assignee {
   width: 20px;
   height: 20px;

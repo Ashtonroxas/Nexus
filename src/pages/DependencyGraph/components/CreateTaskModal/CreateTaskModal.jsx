@@ -24,6 +24,8 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showComplexityDropdown, setShowComplexityDropdown] = useState(false);
 
+  // Clears create task modal upon clicking the new button
+  // to ensure no leftover information
   useEffect(() => {
     if (isOpen) {
       setForm(INITIAL);
@@ -34,6 +36,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
 
   if (!isOpen) return null;
 
+  // UI state form settings based on field changes
   const handleChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
@@ -41,6 +44,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
     }));
   };
 
+  // On submit, sanitize inputs and store information
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -61,6 +65,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
     onClose();
   };
 
+  // Helper to get appropriate styling based on status
   const getStatusClass = (status) => {
     switch (status) {
       case "In Progress":
@@ -73,6 +78,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
     }
   }
 
+  // Helper to get appropriate styling based on complexity
   const getComplexityClass = (complexity) => {
     switch (complexity) {
       case "Severe":
@@ -87,6 +93,9 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
     }
   };
 
+  // Get today's date in YYYY-MM-DD format to restrict past dates
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div
@@ -95,8 +104,8 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
       >
         <div className={styles.header}>
           <div className={styles.titleRow}>
+            {/* Task title and icon row */}
             <ClipboardCheck size={18} className={styles.titleIcon} />
-
             <input
               type="text"
               value={form.title}
@@ -105,7 +114,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
               placeholder="Enter task title..."
             />
           </div>
-
+          {/* Cancel functionality (user freedom) */}
           <X
             size={20}
             color="#6B7280"
@@ -118,6 +127,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
           />
         </div>
 
+        {/* Editable Description row */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Description</label>
@@ -129,6 +139,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
             />
           </div>
 
+          {/** Assignee row */}
           <div className={styles.fieldRow}>
             <div className={styles.fieldRowLabel}>
               <UserCircle2 size={17} className={styles.rowIconPurple} />
@@ -144,20 +155,23 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
             />
           </div>
 
+          {/* Deadline row */}
           <div className={styles.fieldRow}>
             <div className={styles.fieldRowLabel}>
               <Calendar size={17} className={styles.rowIconGray} />
-              <span>Due Date</span>
+              <span>Deadline</span>
             </div>
 
             <input
               type="date"
+              min={today}
               value={form.dueDate}
               onChange={(e) => handleChange("dueDate", e.target.value)}
               className={styles.compactInput}
             />
           </div>
 
+          {/* Status row */}
           <div className={styles.fieldRow}>
             <div className={styles.fieldRowLabel}>
               <Circle
@@ -186,7 +200,8 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
                 <ChevronDown size={16} className={styles.selectChevron} />
               </div>
 
-              {showStatusDropdown && (
+              {/* Conditional rednering for status dropdown */}
+              {showStatusDropdown && ( 
                 <div className={styles.dropdownMenu}>
                   {["To Do", "In Progress", "Done"].map((option) => (
                     <div
@@ -208,6 +223,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
             </div>
           </div>
 
+          {/* Complexity row */}
           <div className={styles.fieldRow}>
             <div className={styles.fieldRowLabel}>
               <Star size={17} className={styles.rowIconOrange} />
@@ -233,6 +249,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
                 <ChevronDown size={16} className={styles.selectChevron} />
               </div>
 
+              {/* Conditional rendering for complexity dropdown */}
               {showComplexityDropdown && (
                 <div className={styles.dropdownMenu}>
                   {["Low", "Medium", "High", "Severe"].map((option) => (
@@ -256,6 +273,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
             </div>
           </div>
 
+          {/* Action button row (cancel and submit) */}
           <div className={styles.actions}>
             <button
               type="button"

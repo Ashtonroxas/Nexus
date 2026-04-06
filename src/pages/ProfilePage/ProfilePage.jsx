@@ -36,11 +36,12 @@ function ProfilePage() {
 
     let months =
       (now.getFullYear() - createdDate.getFullYear()) * 12 +
-      (now.getMonth() - createdDate.getMonth());
+      (now.getMonth() - createdDate.getMonth()) + 1; // at least one to avoid 0 months
 
     return Math.max(months, 0);
   }
 
+  // Loading user information and parsing JSON for website usage
   useEffect(() => {
     const loadProfile = async () => {
       if (!currentUser) return;
@@ -58,6 +59,7 @@ function ProfilePage() {
 
         const data = userSnapshot.data();
 
+        // Load user's project for number status - live firestore snapshot
         const projectsQ = query(collection(db, "projects"),
           where("ownerId", "==", currentUser.uid));
         const projectsSnapshot = await getDocs(projectsQ);
@@ -96,6 +98,8 @@ function ProfilePage() {
     setIsEditing(false);
   };
 
+  // Saving information changes updates user state with temporary state and updates firestore
+  // with the permanent changes
   const handleSave = async () => {
     if (!currentUser || !tempUser) return;
 
@@ -113,7 +117,7 @@ function ProfilePage() {
 
       await updateDoc(doc(db, "users", currentUser.uid), updatedProfile);
       setUser(tempUser);
-      setIsEditing(false);
+      setIsEditing(false); // system status display (may take longer than a few seconds)
     } catch (error) {
       console.error("Error saving profile: ", error);
     }
@@ -127,6 +131,7 @@ function ProfilePage() {
     }
   };
 
+  // Handling moment user begins typing
   const isDataChanged = JSON.stringify(user) !== JSON.stringify(tempUser);
   const handleFieldChange = (field, value) => {
     setTempUser((prev) => ({
@@ -150,6 +155,7 @@ function ProfilePage() {
 
   return (
     <div className={styles.page}>
+      {/* Mobile screen header - includes menu and sign out */}
       <div className={`${styles.mobileRow} d-flex d-lg-none`}>
         {menuButton}
         <Button variant="link"
@@ -159,6 +165,7 @@ function ProfilePage() {
         </Button>
       </div>
 
+      {/* Top user information header - contains profile picture, image, job desc */}
       <Row className="g-4">
         <Col xs={12}>
           <Card className={styles.profileCard}>
@@ -185,6 +192,7 @@ function ProfilePage() {
                 </div>
               </div>
 
+              {/* Sign out button appears in the title header on mobile */}
               <Button variant="link"
                 className={`${styles.desktopSignOut} d-none d-lg-inline`}
                 onClick={handleSignout}>
@@ -194,20 +202,23 @@ function ProfilePage() {
           </Card>
         </Col>
 
+        {/* Viewable/Editable user information sections */}
         <Col xs={12}>
           <Card className={styles.infoCard}>
             <div className={styles.infoHeader}>
               <h3 className={styles.sectionTitle}>Personal Information</h3>
 
-              {!isEditing ? (
+              {!isEditing ? ( // When not editing, displays edit button,
+                              // applies proper css styles for darker field inputs to indicate permanence
                 <Button
                   variant="light"
                   onClick={handleEdit}
                   className={styles.editButton}>
-                  <span className="d-none d-md-inline"> Edit Profile </span>
-                  <Pencil size={18} className="d-md-none" />
+                  <span className="d-none d-lg-inline"> Edit Profile </span>
+                  <Pencil size={18} className="d-lg-none" />
                 </Button>
-              ) : (
+              ) : ( // If editing, displays cancel button and if any change is detected, renders save button
+                    // applies proper css styles for lighter field inputs to indicate editability
                 <div className={styles.editActions}>
                   {isDataChanged && (
                     <Button
@@ -228,12 +239,14 @@ function ProfilePage() {
                 </div>
               )}
             </div>
-
+            
+            {/* Generating field inputs */}
             <div className={styles.fieldsGrid}>
               {profileFields.map((field) => (
                 <div key={field.key} className={styles.fieldBlock}>
                   <label className={styles.fieldLabel}>{field.label}</label>
 
+                  {/* Attaching proper handler for editing status */}
                   {isEditing ? (
                     <input className={styles.fieldInput}
                       value={tempUser[field.key]}
@@ -248,6 +261,7 @@ function ProfilePage() {
           </Card>
         </Col>
 
+        {/* Single row on mobile, 2 row on larger screens (md bootstrap breakpoint) */}
         <Col xs={12} md={6}>
           <Card className={styles.statCard}>
             <div className={styles.statTitle}>Projects</div>

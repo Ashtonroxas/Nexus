@@ -1,8 +1,10 @@
+/* Title styling*/
 .modalTitle {
     color: #FF5C5C;
     font-weight: 700;
 }
 
+/* Action button styling */
 .cancelButton {
     background-color: #E0DEDE;
     color: black;
@@ -30,6 +32,7 @@
   background-color: #ff5c5c !important;
 }
 
+/* Overall modal bootstrap override styling */
 .modalRoot :global(.modal-header) {
   border-bottom: none !important;
 }
@@ -38,6 +41,7 @@
   border-top: none !important;
 }
 
+/* Mobile screen responsiveness */
 @media (max-width: 576px) {
   .modalRoot :global(.modal-dialog) {
     max-width: calc(100vw - 1.5rem);
