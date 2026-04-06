@@ -30,6 +30,41 @@
   background-color: #6366F1 !important;
 }
 
+.roleRow {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: self-start;
+  gap: 6px;
+}
+
+.roleButtons {
+  display: flex;
+  background-color: #e9ecef;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.roleOption {
+  border: none;
+  background-color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #000;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.roleOption.selected {
+  background-color: #6366F1;
+  color: white;
+}
+
+.roleOption:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 .modalRoot :global(.modal-header) {
   border-bottom: none !important;
 }

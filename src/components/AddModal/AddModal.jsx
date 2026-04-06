@@ -153,13 +153,26 @@ function AddModal({
             </div>
           </Form.Group>
 
-          <Form.Group className="mb-3" controlId="addMemberRole">
-            <Form.Label>Role</Form.Label>
-            <Form.Select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </Form.Select>
-          </Form.Group>
+          <div className={styles.roleRow}>
+            <span className={styles.modalText}>Role</span>
+
+            <div className={styles.roleButtons}>
+              <button
+                type="button"
+                className={`${styles.roleOption} ${role === "member" ? styles.selected : ""}`}
+                onClick={() => setRole("member")}
+              >
+                Member
+              </button>
+              <button
+                type="button"
+                className={`${styles.roleOption} ${role === "admin" ? styles.selected : ""}`}
+                onClick={() => setRole("admin")}
+              >
+                Admin
+              </button>
+            </div>
+          </div>
         </Form>
       </Modal.Body>
 
