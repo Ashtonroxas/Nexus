@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useOutletContext } from "react-router-dom"; 
 import { useAuth } from "../../firebase/AuthContext";
-import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { Menu } from "lucide-react"; 
 import styles from './Team.module.css';
+import AddModal from "../../components/AddModal/AddModal";
+import TeamMenu from "../../components/TeamMenu/TeamMenu.jsx";
 
 // Helper to generate initials from a display name
 const getInitials = (name) => {
@@ -25,12 +27,77 @@ const getAvatarColor = (name) => {
 function Team() {
   const { projectId } = useParams();
   const { currentUser } = useAuth();
+
+  // State for Add Member Modal
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Handlers for Add Member Modal
+  const handleCloseAddModal = () => setShowAddModal(false);
+  const handleShowAddModal = () => setShowAddModal(true);
+
+  // Invite Team Member
+  const handleConfirmAdd = async ({ user, role }) => {
+    if (!user) return;
+    try {
+      // 1. Add the user to the projects/{projectId}/members collection
+      await setDoc(doc(db, "projects", projectId, "members", user.uid), {
+        role: role
+      });
+      
+      // 2. Add their ID to the project's memberIds array so it shows on their dashboard
+      await updateDoc(doc(db, "projects", projectId), {
+        memberIds: arrayUnion(user.uid)
+      });
+
+      handleCloseAddModal();
+    } catch (error) {
+      console.error("Error adding member: ", error);
+      alert("Failed to add team member.");
+    }
+  };
+
+  // Remove Team Member
+  const handleRemoveMember = async (memberId) => {
+    if (window.confirm("Are you sure you want to remove this member?")) {
+      try {
+        // Delete the user from the projects/{projectId}/members collection
+        await deleteDoc(doc(db, "projects", projectId, "members", memberId));
+
+        // Remove their ID from the project's memberIds array so it hides from their dashboard
+        await updateDoc(doc(db, "projects", projectId), {
+          memberIds: arrayRemove(memberId)
+        });
+
+      } catch (error) {
+        console.error("Error removing member: ", error);
+        alert("Failed to remove member.");
+      }
+    }
+  };
+
+  // Change Role
+  const handleChangeRole = async (memberId, currentRole) => {
+    const newRole = currentRole === "admin" ? "member" : "admin";
+    if (window.confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
+      try {
+        await updateDoc(doc(db, "projects", projectId, "members", memberId), {
+          role: newRole
+        });
+      } catch (error) {
+        console.error("Error updating role: ", error);
+        alert("Failed to update role.");
+      }
+    }
+  };
   
   // Grab the toggle function from the Layout context
   const { toggleSidebar } = useOutletContext();
   
   const [members, setMembers] = useState([]);
   const [projectName, setProjectName] = useState("Loading...");
+
+  // derive the current user's role from the members list
+  const currentUserRole = members.find((m) => m.userId === currentUser?.uid)?.role ?? "member";
 
   // Fetch project name for the breadcrumb
   useEffect(() => {
@@ -69,6 +136,13 @@ function Team() {
         })
       );
 
+      const roleOrder = { owner: 0, admin: 1, member: 2 };
+      memberDetails.sort((a, b) => {
+        const roleDiff = (roleOrder[a.role] ?? 3) - (roleOrder[b.role] ?? 3);
+        if (roleDiff !== 0) return roleDiff;
+        return a.displayName.localeCompare(b.displayName);
+      });
+
       setMembers(memberDetails);
     });
 
@@ -98,9 +172,12 @@ function Team() {
           <p className={styles.pageSubtitle}>Manage members and roles for this project</p>
         </div>
         
-        <button className={styles.addBtn} onClick={() => alert("Invite flow coming soon!")}>
-          + Add Member
-        </button>
+        {/* ONLY show the Add Member button to owners and admins */}
+        {(currentUserRole === "owner" || currentUserRole === "admin") && (
+          <button className={styles.addBtn} onClick={handleShowAddModal}>
+            + Add Member
+          </button>
+        )}
       </header>
 
       {/* The White Card Container */}
@@ -137,9 +214,7 @@ function Team() {
                   
                   <div className={`${styles.colRole} ${styles.roleInfo}`}>
                     <span className={`${styles.badge} ${styles.roleBadge}`}>
-                      {member.role.toLowerCase() === 'owner' 
-                        ? 'Admin' 
-                        : member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                      {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                     </span>
                     {isYou && <span className={`${styles.badge} ${styles.youBadge}`}>You</span>}
                   </div>
@@ -149,9 +224,15 @@ function Team() {
                   </div>
 
                   <div className={styles.colActions}>
-                    <button className={styles.actionBtn} aria-label="Member actions">
-                      ...
-                    </button>
+                    <TeamMenu
+                      memberId={member.userId}
+                      memberEmail={member.email}
+                      memberRole={member.role}
+                      currentUserRole={currentUserRole}
+                      isYou={isYou}
+                      onRemove={() => handleRemoveMember(member.userId)}
+                      onChangeRole={() => handleChangeRole(member.userId, member.role)}
+                    />
                   </div>
                 </div>
               );
@@ -163,7 +244,16 @@ function Team() {
           </div>
         </div>
       </div>
-      
+      <AddModal
+        show={showAddModal}
+        onHide={handleCloseAddModal}
+        onConfirm={handleConfirmAdd}
+        title="Add Member"
+        confirmText="Send Invite"
+        cancelText="Cancel"
+        // exclude existing members
+        excludeUids={new Set(members.map((m) => m.userId))}
+      />
     </div>
   );
 }

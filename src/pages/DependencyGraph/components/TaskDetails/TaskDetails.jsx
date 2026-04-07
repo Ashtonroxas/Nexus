@@ -88,6 +88,9 @@ function TaskDetails({
           .join("")
       : "--";
 
+  // Get today's date in YYYY-MM-DD format to restrict past dates
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <div className={styles.taskDetailsPanel}>
       {/* If mobile, render bottom sheet styling */}
@@ -206,6 +209,7 @@ function TaskDetails({
             <Calendar size={14} className={styles.dateIcon} />
             <input
               type="date"
+              min={today}
               className={styles.dateInput}
               value={dueDate}
               onChange={handleDateChange}

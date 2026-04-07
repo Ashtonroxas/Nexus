@@ -93,6 +93,9 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
     }
   };
 
+  // Get today's date in YYYY-MM-DD format to restrict past dates
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div
@@ -161,6 +164,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
 
             <input
               type="date"
+              min={today}
               value={form.dueDate}
               onChange={(e) => handleChange("dueDate", e.target.value)}
               className={styles.compactInput}
