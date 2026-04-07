@@ -2,11 +2,14 @@ import { useState, useRef, useEffect } from "react";
 import { Mail, UserCheck, UserMinus } from "lucide-react";
 import styles from '../../pages/Team/Team.module.css';
 
-const TeamMenu = ({ memberId, memberEmail, memberRole, currentUserRole, isYou }) => {
+const TeamMenu = ({ memberId, memberEmail, memberRole, currentUserRole, isYou, onRemove, onChangeRole }) => {
     const roleOrder = { owner: 0, admin: 1, member: 2 };
 
-    // can manage = can remove or change role of this member
-    const canManage = !isYou && roleOrder[currentUserRole] < roleOrder[memberRole] && (currentUserRole === "owner" || currentUserRole === "admin");
+    //Can change role: owners can change anyone below them. Admins can only change Members.
+    const canChangeRole = !isYou && roleOrder[currentUserRole] < roleOrder[memberRole];
+    
+    //Can remove: only owners can remove members.
+    const canRemove = !isYou && currentUserRole === "owner";
 
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef(null);
@@ -43,16 +46,20 @@ const TeamMenu = ({ memberId, memberEmail, memberRole, currentUserRole, isYou })
                     <Mail size={16} className={styles.menuIcon} />
                     <span>{memberEmail}</span>
                 </a>
-                {canManage && <>
-                    <div className={styles.menuItem} onClick={() => alert("Change Role Clicked")}>
+                
+                {canChangeRole && (
+                    <div className={styles.menuItem} onClick={() => { setIsOpen(false); onChangeRole(); }}>
                         <UserCheck size={16} className={styles.menuIcon} />
-                        <span>Change role</span>
+                        <span>Change to {memberRole === 'admin' ? 'Member' : 'Admin'}</span>
                     </div>
-                    <div className={`${styles.menuItem} ${styles.removeText}`} onClick={() => alert("Remove Member Clicked")}>
+                )}
+                
+                {canRemove && (
+                    <div className={`${styles.menuItem} ${styles.removeText}`} onClick={() => { setIsOpen(false); onRemove(); }}>
                         <UserMinus size={16} className={styles.menuIcon} />
                         <span>Remove Member</span>
                     </div>
-                </>}
+                )}
             </div>
         )}
     </div>
