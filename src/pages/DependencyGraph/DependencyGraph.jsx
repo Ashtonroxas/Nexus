@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { 
   ReactFlow, 
   Controls, 
@@ -66,7 +66,7 @@ export default function DependencyGraph() {
   const [selectedTask, setSelectedTask] = useState(null);
 
   // 768 screen limit for screensize differentiation
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
 
   // Helper function to generate random task code
   // Added checks to ensure repeating bug after deleting nodes was removed
@@ -497,7 +497,7 @@ export default function DependencyGraph() {
   // Responsive resizing with a window listener (used for node rendering)
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 992);
     };
     window.addEventListener("resize", handleResize);
 

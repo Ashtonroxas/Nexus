@@ -16,6 +16,7 @@ import {
   deleteDoc,
   query,
   where,
+  or 
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
@@ -35,9 +36,13 @@ function MyProjects() {
   useEffect(() => {
     if (!currentUser) return;
 
+    // Query and parse all user's projects
     const q = query(
       collection(db, "projects"),
-      where("ownerId", "==", currentUser.uid) // Get all owned projects (TODO: changed to all membered projects)
+      or(
+        where("memberIds", "array-contains", currentUser.uid), // Catches projects of which user is a member
+        where("ownerId", "==", currentUser.uid)                // Catches projects of which user is owner
+      )
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -75,6 +80,7 @@ function MyProjects() {
         name: "Untitled Project",
         description: "",
         ownerId: currentUserId,
+        memberIds: [currentUserId],
         taskCount: 0,
         completedTaskCount: 0,
         dueDate: null,
@@ -120,24 +126,29 @@ function MyProjects() {
     return 0;
   });
 
-  // Handling searching functionality
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log("Searching for:", searchTerm);
-  };
+  // Filter the sorted projects based on the search term. Checks case-insensitively and 
+  // looks for matches in project name and description
+  const filteredProjects = sortedProjects.filter((project) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true; // default case to show all projects
+
+    return (
+      project.name.toLowerCase().includes(term) ||
+      project.description.toLowerCase().includes(term)
+    );
+  });
 
   return (
     <div className="d-flex flex-column">
       {/* Top bar - search on desktop*/}
       <Row className="p-3 order-2 order-lg-1">
-        <Form onSubmit={(e) => handleSearch(e)}>
+        <Form>
           <Form.Control
             type="search"
             placeholder="Search projects"
             value={searchTerm}
             size="lg"
             onChange={(e) => setSearchTerm(e.target.value)}
-            onSubmit={() => handleSearch()}
           />
         </Form>
       </Row>
@@ -148,7 +159,12 @@ function MyProjects() {
             {menuButton}
             <div>
               <h2>My Projects</h2>
-              <p>View and manage all your projects • {numProjects} active projects</p>
+              <p>
+                View and manage all your projects • 
+                {searchTerm.trim()
+                  ? ` ${filteredProjects.length} matching project${filteredProjects.length !== 1 ? "s" : ""}`
+                  : ` ${numProjects} active project${numProjects !== 1 ? "s" : ""}`}
+                  </p>
             </div>
           </div>
         </Col>
@@ -182,7 +198,7 @@ function MyProjects() {
       </Row>
       {/* Rendering parsed project information for user */}
       <Row className="p-3 gap-3 justify-content-evenly justify-content-md-start order-3">
-        {sortedProjects.map((project) => {
+        {filteredProjects.map((project) => {
           const currentUserId = currentUser?.uid;
           const canDelete = project.owner === currentUserId; //verify user priveleges
 
