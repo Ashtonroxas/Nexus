@@ -3,7 +3,6 @@ import { useParams, useOutletContext } from "react-router-dom";
 import { useAuth } from "../../firebase/AuthContext";
 import { collection, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
-import { Menu } from "lucide-react"; 
 import styles from './Team.module.css';
 import AddModal from "../../components/AddModal/AddModal";
 import TeamMenu from "../../components/TeamMenu/TeamMenu.jsx";
@@ -27,6 +26,7 @@ const getAvatarColor = (name) => {
 function Team() {
   const { projectId } = useParams();
   const { currentUser } = useAuth();
+  const { menuButton } = useOutletContext();
 
   // State for Add Member Modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -89,10 +89,7 @@ function Team() {
       }
     }
   };
-  
-  // Grab the toggle function from the Layout context
-  const { toggleSidebar } = useOutletContext();
-  
+    
   const [members, setMembers] = useState([]);
   const [projectName, setProjectName] = useState("Loading...");
 
@@ -154,9 +151,7 @@ function Team() {
       
       {/* Mobile Top Bar (Hamburger + Breadcrumbs) */}
       <div className={styles.mobileTopBar}>
-        <button className={styles.menuToggle} onClick={toggleSidebar} aria-label="Open Menu">
-          <Menu size={28} color="#6366F1" strokeWidth={2} />
-        </button>
+        {menuButton}
         <div className={styles.breadcrumb}>
           <span className={styles.breadcrumbMuted}>Projects / </span>
           <span className={styles.breadcrumbActive}>{projectName}</span>

@@ -38,10 +38,8 @@ function NexusLayout() {
         </aside>
 
         <main className={`${styles.contentColumn} p-3`}>
-          {/* Passes toggleSidebar down to your Team page */}
           <Outlet context={{ 
             menuButton, 
-            toggleSidebar: () => setShowSidebar(true) 
           }}/>
         </main>
       </div>
