@@ -266,7 +266,7 @@
 }
 
 /* MOBILE LAYOUT FIXES (Scaled-down Table) */
-@media (max-width: 768px) {
+@media (max-width: 991.98px) {
   .contentContainer {
     padding: 16px 12px; 
   }

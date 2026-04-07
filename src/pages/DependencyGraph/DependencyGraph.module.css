@@ -290,14 +290,14 @@
 }
 
 /* Bottom sheet appears on tablets as well */
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .bottomSheetOverlay {
     display: none;
   }
 }
 
 /* Mobile responsiveness and headers */
-@media (max-width: 767px) {
+@media (max-width: 991.98px) {
   .sidebarOverlay {
     display: none;
   }
