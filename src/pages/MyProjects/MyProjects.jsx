@@ -16,6 +16,7 @@ import {
   deleteDoc,
   query,
   where,
+  or 
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
@@ -35,9 +36,13 @@ function MyProjects() {
   useEffect(() => {
     if (!currentUser) return;
 
+    // Query and parse all user's projects
     const q = query(
       collection(db, "projects"),
-      where("ownerId", "==", currentUser.uid) // Get all owned projects (TODO: changed to all membered projects)
+      or(
+        where("memberIds", "array-contains", currentUser.uid), // Catches new projects
+        where("ownerId", "==", currentUser.uid)                // Catches old projects
+      )
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -75,6 +80,7 @@ function MyProjects() {
         name: "Untitled Project",
         description: "",
         ownerId: currentUserId,
+        memberIds: [currentUserId],
         taskCount: 0,
         completedTaskCount: 0,
         dueDate: null,
