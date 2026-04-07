@@ -125,7 +125,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                 Dependency Graph
               </NavLink>
 
-              {/* Navigates to project's respective risk report page */}
+              {/* Navigates to project's respective risk report page
               <NavLink
                 to={`/projects/${projectId}/report`}
                 className={({ isActive }) =>
@@ -134,7 +134,7 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                 onClick={handleNav}
               >
                 Risk Report
-              </NavLink>
+              </NavLink> */}
 
               {/* Navigates to project's respective teams page */}
               <NavLink
