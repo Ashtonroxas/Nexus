@@ -4,7 +4,7 @@
   width: 100%;
 }
 
-/*  Mobile Specific Elements (Hidden on Desktop)  */
+/* Mobile Specific Elements (Hidden on Desktop)  */
 .mobileTopBar {
   display: none;
 }
@@ -86,6 +86,7 @@
   font-size: 15px;
   font-weight: 400;
   color: #6B7280;
+  gap: 32px; /* Added spacing for desktop */
 }
 
 .tableRow {
@@ -93,6 +94,7 @@
   padding: 16px 24px;
   border-bottom: 1px solid #E5E7EB;
   align-items: center;
+  gap: 32px; /* spacing for desktop */
 }
 
 .tableRow:last-child {
@@ -108,10 +110,11 @@
 
 /* Column Widths */
 .colMember { flex: 2; min-width: 0; }
-.colRole { flex: 1; min-width: 0; }
-.colEmail { flex: 1.5; display: block; min-width: 0; }
+.colRole { flex: 1.5; min-width: 0; } /* Increased from 1 to push email right */
+.colEmail { flex: 2; display: block; min-width: 0; }
 
 .colActions {
+  margin-left: auto; /* Guarantees it gets pushed to the far right */
   flex: 0 0 40px; 
   display: flex;
   justify-content: flex-end;
@@ -341,11 +344,13 @@
     padding: 8px 12px;
     font-size: 11px; 
     min-width: 0; 
+    gap: 8px; /* Override desktop gap for mobile */
   }
 
   .tableRow {
     padding: 12px 12px; 
     min-width: 0;
+    gap: 8px; /* Override desktop gap for mobile */
   }
 
   .avatar {
@@ -381,8 +386,8 @@
   }
 
   .colActions {
+    margin-left: auto; /* Ensures menu is pushed right even when email is hidden */
     flex: 0 0 24px; 
-    margin-left: 0;
   }
 
   .actionBtn {
