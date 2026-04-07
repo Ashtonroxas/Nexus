@@ -40,8 +40,8 @@ function MyProjects() {
     const q = query(
       collection(db, "projects"),
       or(
-        where("memberIds", "array-contains", currentUser.uid), // Catches new projects
-        where("ownerId", "==", currentUser.uid)                // Catches old projects
+        where("memberIds", "array-contains", currentUser.uid), // Catches projects of which user is a member
+        where("ownerId", "==", currentUser.uid)                // Catches projects of which user is owner
       )
     );
 
