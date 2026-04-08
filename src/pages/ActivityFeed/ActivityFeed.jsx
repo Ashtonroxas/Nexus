@@ -1,51 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Bell, UserPlus, CheckCircle, Clock, X, Check } from 'lucide-react';
+import { Bell, UserPlus, CheckCircle, Clock, X, Check, PlusCircle, Trash2, CalendarClock } from 'lucide-react';
+import { collectionGroup, query, where, orderBy, onSnapshot, updateDoc, writeBatch, doc, setDoc, collection, arrayUnion } from 'firebase/firestore';
+import { db } from '../../firebase/firebase';
+import { useAuth } from '../../firebase/AuthContext';
 import styles from './ActivityFeed.module.css';
 
 export default function ActivityFeed() {
   const { menuButton } = useOutletContext() || {};
   const [filter, setFilter] = useState('all');
+  const [notifications, setNotifications] = useState([]);
+  const { currentUser } = useAuth(); 
 
-  //Sample use
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'inv-1',
-      type: 'invite',
-      senderName: 'Angelos Boules',
-      projectName: 'Nexus Mobile App',
-      timestamp: '10 minutes ago',
-      read: false,
-      status: 'pending',
-    },
-    {
-      id: 'act-1',
-      type: 'task_completed',
-      senderName: 'Antonio Hbaiter',
-      taskCode: 'TASK-104',
-      projectName: 'Frontend Redesign',
-      timestamp: '2 hours ago',
-      read: false,
-    },
-    {
-      id: 'inv-2',
-      type: 'invite',
-      senderName: 'Brandon Bui',
-      projectName: 'Q3 Marketing site',
-      timestamp: '1 day ago',
-      read: true,
-      status: 'pending',
-    },
-    {
-      id: 'act-2',
-      type: 'bottleneck',
-      senderName: 'System',
-      taskCode: 'TASK-089',
-      projectName: 'Backend API',
-      timestamp: '2 days ago',
-      read: true,
-    }
-  ]);
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Fetches from EVERY 'activities' subcollection where the user's UID is in visibleTo
+    const q = query(
+      collectionGroup(db, 'activities'),
+      where('visibleTo', 'array-contains', currentUser.uid),
+      orderBy('timestamp', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log('Activity Feed Query Results:', {
+        userId: currentUser.uid,
+        activitiesFound: snapshot.docs.length,
+        activities: snapshot.docs.map(doc => ({
+          id: doc.id,
+          type: doc.data().type,
+          visibleTo: doc.data().visibleTo,
+          senderName: doc.data().senderName,
+          projectName: doc.data().projectName
+        }))
+      });
+      
+      const fetchedNotifs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ref: doc.ref, 
+        ...doc.data(),
+        timestamp: doc.data().timestamp?.toDate().toLocaleString() || 'Just now'
+      }));
+      setNotifications(fetchedNotifs);
+    }, (error) => {
+      console.error('Activity Feed Query Error:', error);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -54,26 +56,77 @@ export default function ActivityFeed() {
     return true;
   });
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    if (!currentUser || unreadCount === 0) return;
+    
+    const batch = writeBatch(db);
+    notifications.forEach((notif) => {
+      if (!notif.read) {
+        batch.update(notif.ref, { read: true });
+      }
+    });
+
+    try {
+      await batch.commit();
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+    }
   };
 
-  const handleInviteResponse = (id, response) => {
-    setNotifications(prev => 
-      prev.map(n => 
-        n.id === id ? { ...n, status: response, read: true } : n
-      )
-    );
+  const handleInviteResponse = async (notif, response) => {
+    try {
+      // Extract projectId from the notification ref path (projects/projectId/activities/docId)
+      const projectId = notif.ref.path.split('/')[1];
+      
+      // Update the activity document with the response
+      await updateDoc(notif.ref, { 
+        status: response, 
+        read: true 
+      });
+
+      // If accepted, add user to the project's members
+      if (response === 'accepted') {
+        // Add to members subcollection
+        await setDoc(doc(db, "projects", projectId, "members", currentUser.uid), {
+          userId: currentUser.uid,
+          role: "member",
+          joinedAt: new Date(),
+        });
+
+        // Add to memberIds array
+        await updateDoc(doc(db, "projects", projectId), {
+          memberIds: arrayUnion(currentUser.uid)
+        });
+      }
+    } catch (error) {
+      console.error("Error updating invite status:", error);
+      alert("Failed to process invite response. Please try again.");
+    }
+  };
+
+  const markAsRead = async (notif) => {
+    if (notif.read) return; 
+    try {
+      await updateDoc(notif.ref, { read: true });
+    } catch (error) {
+      console.error("Error marking as read:", error);
+    }
   };
 
   const renderIcon = (type) => {
     switch (type) {
       case 'invite':
-        return <div className={`${styles.iconWrapper} ${styles.iconInvite}`}><UserPlus size={18} /></div>;
+        return <div className={`${styles.iconWrapper} ${styles.iconInvite}`}><UserPlus size={18} color="#3B82F6" /></div>;
       case 'task_completed':
-        return <div className={`${styles.iconWrapper} ${styles.iconSuccess}`}><CheckCircle size={18} /></div>;
+        return <div className={`${styles.iconWrapper} ${styles.iconSuccess}`}><CheckCircle size={18} color="#10B981" /></div>;
+      case 'task_created':
+        return <div className={`${styles.iconWrapper}`} style={{ backgroundColor: '#E0F2FE', padding: '8px', borderRadius: '50%' }}><PlusCircle size={18} color="#0284C7" /></div>;
+      case 'task_deleted':
+        return <div className={`${styles.iconWrapper}`} style={{ backgroundColor: '#FEE2E2', padding: '8px', borderRadius: '50%' }}><Trash2 size={18} color="#EF4444" /></div>;
+      case 'deadline':
+        return <div className={`${styles.iconWrapper}`} style={{ backgroundColor: '#FFEDD5', padding: '8px', borderRadius: '50%' }}><CalendarClock size={18} color="#EA580C" /></div>;
       case 'bottleneck':
-        return <div className={`${styles.iconWrapper} ${styles.iconWarning}`}><Bell size={18} /></div>;
+        return <div className={`${styles.iconWrapper} ${styles.iconWarning}`}><Bell size={18} color="#F59E0B" /></div>;
       default:
         return <div className={`${styles.iconWrapper} ${styles.iconDefault}`}><Bell size={18} /></div>;
     }
@@ -130,11 +183,7 @@ export default function ActivityFeed() {
             <div 
               key={notif.id} 
               className={`${styles.notificationCard} ${!notif.read ? styles.unreadCard : ''}`}
-              onClick={() => {
-                if (!notif.read) {
-                  setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
-                }
-              }}
+              onClick={() => markAsRead(notif)}
             >
               {!notif.read && <div className={styles.unreadDot} />}
               
@@ -143,15 +192,27 @@ export default function ActivityFeed() {
                 
                 <div className={styles.textStack}>
                   <div className={styles.mainText}>
+                    
+                    {/* Render different text based on the activity type */}
                     {notif.type === 'invite' && (
                       <span><strong>{notif.senderName}</strong> invited you to join <strong>{notif.projectName}</strong></span>
                     )}
                     {notif.type === 'task_completed' && (
                       <span><strong>{notif.senderName}</strong> completed <strong>{notif.taskCode}</strong> in {notif.projectName}</span>
                     )}
+                    {notif.type === 'task_created' && (
+                      <span><strong>{notif.senderName}</strong> added a new task <strong>{notif.taskCode}</strong> to {notif.projectName}</span>
+                    )}
+                    {notif.type === 'task_deleted' && (
+                      <span><strong>{notif.senderName}</strong> deleted task <strong>{notif.taskCode}</strong> from {notif.projectName}</span>
+                    )}
+                    {notif.type === 'deadline' && (
+                      <span><strong>{notif.taskCode}</strong> in {notif.projectName} is approaching its deadline!</span>
+                    )}
                     {notif.type === 'bottleneck' && (
                       <span><strong>{notif.taskCode}</strong> in {notif.projectName} has been marked as a bottleneck.</span>
                     )}
+
                   </div>
                   
                   <div className={styles.timeText}>
@@ -163,13 +224,13 @@ export default function ActivityFeed() {
                     <div className={styles.actionButtons}>
                       <button 
                         className={styles.acceptBtn}
-                        onClick={(e) => { e.stopPropagation(); handleInviteResponse(notif.id, 'accepted'); }}
+                        onClick={(e) => { e.stopPropagation(); handleInviteResponse(notif, 'accepted'); }}
                       >
                         <Check size={16} /> Accept
                       </button>
                       <button 
                         className={styles.declineBtn}
-                        onClick={(e) => { e.stopPropagation(); handleInviteResponse(notif.id, 'declined'); }}
+                        onClick={(e) => { e.stopPropagation(); handleInviteResponse(notif, 'declined'); }}
                       >
                         <X size={16} /> Decline
                       </button>
