@@ -221,6 +221,117 @@
   flex-shrink: 0;
 }
 
+/* Dropdown Styling for Assignee */
+.styledSelect {
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  background-color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 500;
+  color: #111827;
+  padding: 6px 26px 6px 10px;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  cursor: pointer;
+  min-width: 120px;
+  transition: all 0.2s ease;
+}
+
+.styledSelect:hover,
+.styledSelect:focus {
+  border-color: #6366F1;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* Custom styled dropdown for assignee */
+.dropdownContainer {
+  position: relative;
+  width: 100%;
+}
+
+.assigneeTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.assigneeTrigger:hover {
+  border-color: #6366F1;
+  background: #F8FAFC;
+}
+
+.assigneeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.assigneeText {
+  font-size: 12px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.chevron {
+  color: #6B7280;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.assigneeTrigger:hover .chevron {
+  color: #6366F1;
+}
+
+/* Styled dropdown card for Member Names*/
+.assigneeDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 10px 20px rgba(16, 24, 40, 0.1);
+  z-index: 20;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  cursor: pointer;
+  background: #FFFFFF;
+  transition: 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdownItem:hover {
+  background: #F8FAFC;
+}
+
+.dropdownItem:active {
+  background: #F0F4FF;
+}
+
 /* Dependency sections */
 .linkSection {
   display: flex;
