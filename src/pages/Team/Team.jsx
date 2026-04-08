@@ -7,6 +7,9 @@ import styles from './Team.module.css';
 import AddModal from "../../components/AddModal/AddModal";
 import TeamMenu from "../../components/TeamMenu/TeamMenu.jsx";
 
+//Import the activity logger
+import { logActivity } from "../../utils/activityLogger";
+
 // Helper to generate initials from a display name
 const getInitials = (name) => {
   if (!name) return "?";
@@ -28,6 +31,9 @@ function Team() {
   const { currentUser } = useAuth();
   const { menuButton } = useOutletContext();
 
+  const [members, setMembers] = useState([]);
+  const [projectName, setProjectName] = useState("Loading...");
+
   // State for Add Member Modal
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -39,15 +45,32 @@ function Team() {
   const handleConfirmAdd = async ({ user, role }) => {
     if (!user) return;
     try {
-      // 1. Add the user to the projects/{projectId}/members collection
+      console.log('Inviting user:', {
+        userId: user.uid,
+        userName: user.displayName,
+        projectId,
+        role
+      });
+
+      // Add the user to the projects/{projectId}/members collection
       await setDoc(doc(db, "projects", projectId, "members", user.uid), {
         role: role
       });
       
-      // 2. Add their ID to the project's memberIds array so it shows on their dashboard
+      //Add their ID to the project's memberIds array so it shows on their dashboard
       await updateDoc(doc(db, "projects", projectId), {
         memberIds: arrayUnion(user.uid)
       });
+
+      //Trigger the activity logger for the invite!
+      console.log('About to log invite activity...');
+      await logActivity(projectId, 'invite', {
+        senderName: currentUser.displayName || "A team member",
+        projectName: projectName !== "Loading..." ? projectName : "Nexus Project",
+        invitedUserId: user.uid, // Sends to the specific invited user
+        status: 'pending' // Gives them the Accept/Decline buttons
+      });
+      console.log('Invite activity logged!');
 
       handleCloseAddModal();
     } catch (error) {
@@ -90,9 +113,6 @@ function Team() {
     }
   };
     
-  const [members, setMembers] = useState([]);
-  const [projectName, setProjectName] = useState("Loading...");
-
   // derive the current user's role from the members list
   const currentUserRole = members.find((m) => m.userId === currentUser?.uid)?.role ?? "member";
 
