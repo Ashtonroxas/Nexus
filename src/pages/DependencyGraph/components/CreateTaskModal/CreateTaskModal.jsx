@@ -19,10 +19,11 @@ const INITIAL = {
   complexity: "Low",
 };
 
-function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
+function CreateTaskModal({ isOpen, onClose, onCreateTask, teamMembers = [] }) {
   const [form, setForm] = useState(INITIAL);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showComplexityDropdown, setShowComplexityDropdown] = useState(false);
+  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false); // New state
 
   // Clears create task modal upon clicking the new button
   // to ensure no leftover information
@@ -31,6 +32,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
       setForm(INITIAL);
       setShowComplexityDropdown(false);
       setShowStatusDropdown(false);
+      setShowAssigneeDropdown(false);
     }
   }, [isOpen]);
 
@@ -139,20 +141,56 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
             />
           </div>
 
-          {/** Assignee row */}
+          {/** Assignee row - USING CUSTOM DROPDOWN UI */}
           <div className={styles.fieldRow}>
             <div className={styles.fieldRowLabel}>
               <UserCircle2 size={17} className={styles.rowIconPurple} />
               <span>Assignee</span>
             </div>
 
-            <input
-              type="text"
-              value={form.assignee}
-              onChange={(e) => handleChange("assignee", e.target.value)}
-              className={styles.compactInput}
-              placeholder="Assign..."
-            />
+            <div className={styles.dropdownContainer}>
+              <div
+                className={styles.compactInput}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+                onClick={() => {
+                  setShowAssigneeDropdown((prev) => !prev);
+                  setShowStatusDropdown(false);
+                  setShowComplexityDropdown(false);
+                }}
+              >
+                <span style={{ color: form.assignee ? '#111827' : '#9CA3AF' }}>
+                  {form.assignee || "Assign..."}
+                </span>
+                <ChevronDown size={16} className={styles.selectChevron} />
+              </div>
+
+              {/* Conditional rendering for assignee dropdown */}
+              {showAssigneeDropdown && (
+                <div className={styles.dropdownMenu}>
+                  <div
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      handleChange("assignee", "");
+                      setShowAssigneeDropdown(false);
+                    }}
+                  >
+                    <span>Unassigned</span>
+                  </div>
+                  {teamMembers.map((member) => (
+                    <div
+                      key={member.id}
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        handleChange("assignee", member.name);
+                        setShowAssigneeDropdown(false);
+                      }}
+                    >
+                      <span>{member.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Deadline row */}
@@ -188,6 +226,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
                 onClick={() => {
                   setShowStatusDropdown((prev) => !prev);
                   setShowComplexityDropdown(false);
+                  setShowAssigneeDropdown(false);
                 }}
               >
                 <div className={styles.pillFieldLeft}>
@@ -236,6 +275,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask }) {
                 onClick={() => {
                   setShowComplexityDropdown((prev) => !prev);
                   setShowStatusDropdown(false);
+                  setShowAssigneeDropdown(false);
                 }}
               >
                 <div className={styles.pillFieldLeft}>
