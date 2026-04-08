@@ -6,7 +6,7 @@ import ProfilePage from './pages/ProfilePage/ProfilePage';
 import AuthPage from './pages/Auth/AuthPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Team from './pages/Team/Team';
-// import ActivityFeed from './pages/ActivityFeed/ActivityFeed'; 
+import ActivityFeed from './pages/ActivityFeed/ActivityFeed'; 
 
 function App() {
   return (
@@ -21,8 +21,7 @@ function App() {
           <Route path="/" element={<Navigate to="/projects" replace />} />
           <Route path="/projects" element={<MyProjects />} />
           
-          {/* Activity Feed temporarily commented */}
-          {/* <Route path="/activity" element={<ActivityFeed />} /> */}
+          <Route path="/activity" element={<ActivityFeed />} /> 
           
           <Route path="/profile" element={<ProfilePage />} />
 
