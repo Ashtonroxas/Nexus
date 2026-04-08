@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { X, Calendar, ArrowLeft, ArrowRight } from "lucide-react";
+import { X, Calendar, ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { useAuth } from "../../../../firebase/AuthContext";
+import { logActivity } from "../../../../utils/activityLogger";
 import styles from "./TaskDetails.module.css";
 
 function TaskDetails({
@@ -9,7 +12,13 @@ function TaskDetails({
   blockedBy = [],
   blocking = [],
   isMobile = false,
+  teamMembers = [],
+  projectName = "Project",
 }) {
+  // Hooks for activity logging
+  const { projectId } = useParams();
+  const { currentUser } = useAuth();
+
   // UI state handlers for task details
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -17,6 +26,7 @@ function TaskDetails({
   const [complexity, setComplexity] = useState("Low");
   const [assigneeName, setAssigneeName] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
 
   // Lifecycle listener for changes in task information to update
   // sidebar/bottom sheet automatically
@@ -29,7 +39,22 @@ function TaskDetails({
     setComplexity(task.complexity || "Low");
     setAssigneeName(task.assigneeName || "");
     setDueDate(task.dueDate || "");
+    setShowAssigneeDropdown(false);
   }, [task]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showAssigneeDropdown && !e.target.closest(`.${styles.dropdownContainer}`)) {
+        setShowAssigneeDropdown(false);
+      }
+    };
+
+    if (showAssigneeDropdown) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [showAssigneeDropdown]);
 
   if (!task) return null;
 
@@ -38,7 +63,7 @@ function TaskDetails({
     onSave?.(task.id, updates);
   };
 
-  // -- Group of helper function to save fields at save events -- //
+  //helper function to save fields at save events  //
   
   // Save when user clicks out of title
   const handleTitleBlur = () => {
@@ -50,11 +75,6 @@ function TaskDetails({
     saveField({ description });
   };
 
-  // Save when user clicks out of assignee
-  const handleAssigneeBlur = () => {
-    saveField({ assigneeName });
-  };
-
   // update date
   const handleDateChange = (e) => {
     const value = e.target.value;
@@ -63,10 +83,23 @@ function TaskDetails({
   };
 
   // update status
-  const handleStatusChange = (e) => {
+  const handleStatusChange = async (e) => {
     const value = e.target.value;
     setStatus(value);
     saveField({ status: value });
+
+    // Log activity when task is marked as completed
+    if (value === "Done" && task && projectId) {
+      try {
+        await logActivity(projectId, 'task_completed', {
+          senderName: currentUser?.displayName || "A team member",
+          projectName: projectName,
+          taskCode: task.taskCode,
+        });
+      } catch (error) {
+        console.error("Error logging task completion activity:", error);
+      }
+    }
   };
 
   // update complexity
@@ -183,21 +216,53 @@ function TaskDetails({
         </div>
 
         <div className={styles.infoField}>
-          {/* Editable assignee field & initial bubble */}
+          {/* Selectable assignee field with styled dropdown */}
           <div className={styles.infoLabel}>Assignee</div>
 
-          <div className={styles.assigneeRow}>
-            <div className={styles.assigneeBadge}>
-              {liveAssigneeInitials}
+          <div className={styles.dropdownContainer}>
+            <div
+              className={styles.assigneeTrigger}
+              onClick={() => setShowAssigneeDropdown((prev) => !prev)}
+            >
+              <div className={styles.assigneeRow}>
+                <div className={styles.assigneeBadge}>
+                  {liveAssigneeInitials}
+                </div>
+                <span className={styles.assigneeText}>
+                  {assigneeName || "Unassigned"}
+                </span>
+              </div>
+              <ChevronDown size={16} className={styles.chevron} />
             </div>
 
-            <input
-              className={styles.inlineInput}
-              value={assigneeName}
-              onChange={(e) => setAssigneeName(e.target.value)}
-              onBlur={handleAssigneeBlur}
-              placeholder="Unassigned"
-            />
+            {/* Styled dropdown card */}
+            {showAssigneeDropdown && (
+              <div className={styles.assigneeDropdown}>
+                <div
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    setAssigneeName("");
+                    saveField({ assigneeName: "" });
+                    setShowAssigneeDropdown(false);
+                  }}
+                >
+                  <span>Unassigned</span>
+                </div>
+                {teamMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      setAssigneeName(member.name);
+                      saveField({ assigneeName: member.name });
+                      setShowAssigneeDropdown(false);
+                    }}
+                  >
+                    <span>{member.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
