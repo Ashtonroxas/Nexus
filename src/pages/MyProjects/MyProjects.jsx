@@ -16,7 +16,8 @@ import {
   deleteDoc,
   query,
   where,
-  or 
+  or,
+  getDocs
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
@@ -45,29 +46,41 @@ function MyProjects() {
       )
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const projectsArr = snapshot.docs.map((doc) => {
-        const data = doc.data();
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const projectsArr = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const data = doc.data();
+          
+          // Fetch member count from the members subcollection (source of truth)
+          let memberCount = 1;
+          try {
+            const membersSnapshot = await getDocs(collection(db, "projects", doc.id, "members"));
+            memberCount = membersSnapshot.size || 1;
+          } catch (error) {
+            // Fallback to memberIds array length if subcollection doesn't exist
+            memberCount = data.memberIds ? data.memberIds.length : 1;
+          }
 
-        return {
-          id: doc.id,
-          name: data.name || "Untitled Project",
-          description: data.description || "",
-          completedTasks: data.completedTaskCount || 0,
-          totalTasks: data.taskCount || 0,
-          owner: data.ownerId || "",
-          dueDate: data.dueDate?.toDate? data.dueDate.toDate() : null,
-          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
-          numMembers: data.memberCount || 1,
-          color: data.color || "#6366F1",
-        };
-      });
+          return {
+            id: doc.id,
+            name: data.name || "Untitled Project",
+            description: data.description || "",
+            completedTasks: data.completedTaskCount || 0,
+            totalTasks: data.taskCount || 0,
+            owner: data.ownerId || "",
+            dueDate: data.dueDate?.toDate? data.dueDate.toDate() : null,
+            updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+            numMembers: memberCount,
+            color: data.color || "#6366F1",
+          };
+        })
+      );
 
       setProjects(projectsArr);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]);
 
   // Create new project and store it in firestore with default initializations
   const handleNewProject = async () => {
