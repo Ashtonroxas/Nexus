@@ -26,11 +26,14 @@ import {
   deleteDoc,
   setDoc,
   getDocs,
+  getDoc // Added getDoc here
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
+import { useAuth } from "../../firebase/AuthContext";
 import TaskNode from './components/TaskNode/TaskNode';
 import CreateTaskModal from './components/CreateTaskModal/CreateTaskModal';
 import TaskDetails from './components/TaskDetails/TaskDetails';
+import { logActivity } from "../../utils/activityLogger";
 import styles from './DependencyGraph.module.css';
 
 const nodeTypes = { 
@@ -43,13 +46,17 @@ export default function DependencyGraph() {
   const [edges, setEdges ] = useEdgesState([]);
 
   const { menuButton } = useOutletContext(); // from parent layout
-  const { projectId } = useParams(); 
+  const { projectId } = useParams();
+  const { currentUser } = useAuth(); // Current authenticated user
 
   // State management for temp/permanent project data
   const [project, setProject] = useState(null);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [projectColor, setProjectColor] = useState("#6366F1");
+
+  // State management for team members fetched from Firestore
+  const [teamMembers, setTeamMembers] = useState([]);
 
   // System status loading information
   const [saveStatus, setSaveStatus] = useState("idle");
@@ -67,6 +74,34 @@ export default function DependencyGraph() {
 
   // 768 screen limit for screensize differentiation
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+
+  // Fetch Team Members specifically invited to this project
+  useEffect(() => {
+    if (!projectId) return;
+
+    const membersRef = collection(db, "projects", projectId, "members");
+    const unsubscribe = onSnapshot(membersRef, async (snapshot) => {
+      const memberDocs = snapshot.docs.map(doc => doc.id); // Get UIDs
+
+      // Fetch full user details from the 'users' collection
+      const memberDetails = await Promise.all(
+        memberDocs.map(async (userId) => {
+          const userSnap = await getDoc(doc(db, "users", userId));
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          return {
+            id: userId,
+            name: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || "Unknown User",
+          };
+        })
+      );
+
+      // Sort alphabetically by name
+      memberDetails.sort((a, b) => a.name.localeCompare(b.name));
+      setTeamMembers(memberDetails);
+    });
+
+    return () => unsubscribe();
+  }, [projectId]);
 
   // Helper function to generate random task code
   // Added checks to ensure repeating bug after deleting nodes was removed
@@ -167,6 +202,13 @@ export default function DependencyGraph() {
           y: 140 + nodes.length * 20,
         },
       }); 
+
+      // Log activity for task creation
+      await logActivity(projectId, 'task_created', {
+        senderName: currentUser?.displayName || "A team member",
+        projectName: projectName || "Project",
+        taskCode: nextTaskCode,
+      });
     } catch (error) {
       console.error("Error creating task: ", error);
     }
@@ -204,6 +246,11 @@ export default function DependencyGraph() {
       if (!projectId || !taskId) return;
 
       try {
+        // Fetch task data before deleting to get task code for activity logging
+        const taskDoc = await getDoc(doc(db, "projects", projectId, "tasks", taskId));
+        const taskData = taskDoc.data();
+        const taskCode = taskData?.taskCode || 'Unknown Task';
+
         const edgesRef = collection(db, "projects", projectId, "edges");
         const edgeSnapshot = await getDocs(edgesRef);
 
@@ -221,6 +268,13 @@ export default function DependencyGraph() {
       // delete all associated tasks
       await deleteDoc(doc(db, "projects", projectId, "tasks", taskId));
 
+      // Log activity for task deletion
+      await logActivity(projectId, 'task_deleted', {
+        senderName: currentUser?.displayName || "A team member",
+        projectName: projectName || "Project",
+        taskCode: taskCode,
+      });
+
       // Update UI status for immediate system status
       setEdges((eds) => 
         eds.filter((edge) => edge.source !== taskId && edge.target !== taskId));
@@ -228,11 +282,57 @@ export default function DependencyGraph() {
       } catch (error) {
         console.error("Error deleting task and edges: ", error);
       }
-    }, [projectId, setNodes, setEdges]);
+    }, [projectId, setNodes, setEdges, currentUser, projectName]);
+
+  // Check for approaching deadlines and log activities
+  const checkApproachingDeadlines = useCallback(async (taskDocs) => {
+    if (!projectId || !projectName) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const threeDaysFromNow = new Date(today);
+    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+    for (const taskDoc of taskDocs) {
+      const taskData = taskDoc.data();
+      
+      // Skip if no due date or task is already done
+      if (!taskData.dueDate || taskData.status === "Done") continue;
+
+      // Parse the due date
+      const dueDate = new Date(taskData.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+
+      // Check if deadline is approaching (within 3 days and not in the past)
+      if (dueDate >= today && dueDate <= threeDaysFromNow) {
+        try {
+          // Check if we've already logged a deadline activity for this task
+          const activitiesRef = collection(db, "projects", projectId, "activities");
+          const existingActivities = await getDocs(activitiesRef);
+          
+          const alreadyLogged = existingActivities.docs.some(doc => {
+            const data = doc.data();
+            return data.type === 'deadline' && data.taskCode === taskData.taskCode;
+          });
+
+          // Only log if we haven't already logged this deadline
+          if (!alreadyLogged) {
+            await logActivity(projectId, 'deadline', {
+              senderName: "System",
+              projectName: projectName,
+              taskCode: taskData.taskCode,
+            });
+          }
+        } catch (error) {
+          console.error("Error checking deadline:", error);
+        }
+      }
+    }
+  }, [projectId, projectName]);
 
   // Handles association of dependencies and task collections in firestore for use
   // when user connects two nodes on the graph UI
-    const onConnect = useCallback(
+  const onConnect = useCallback(
     async (params) => {
       if (!projectId || !params.source || !params.target) return;
 
@@ -544,6 +644,9 @@ export default function DependencyGraph() {
       setNodes(firestoreNodes);
       updateProjectTaskInfo(snapshot.docs);
       updateProjectDeadline(snapshot.docs);
+      
+      // Check for approaching deadlines
+      checkApproachingDeadlines(snapshot.docs);
     });
 
     return () => unsubscribe();
@@ -552,7 +655,8 @@ export default function DependencyGraph() {
       handleDeleteTask, 
       updateProjectDeadline, 
       updateProjectTaskInfo,
-      selectedTaskId
+      selectedTaskId,
+      checkApproachingDeadlines
     ]);
   
   // Syncing selected task for UI state management
@@ -769,6 +873,8 @@ export default function DependencyGraph() {
                 onSave={handleUpdateTask}
                 blockedBy={blockedByTasks}
                 blocking={blockingTasks}
+                teamMembers={teamMembers}
+                projectName={projectName}
               />
             </aside>
           </div>
@@ -791,6 +897,8 @@ export default function DependencyGraph() {
                 blockedBy={blockedByTasks}
                 blocking={blockingTasks}
                 isMobile={true}
+                teamMembers={teamMembers}
+                projectName={projectName}
               />
             </div>
           </div>
@@ -800,7 +908,9 @@ export default function DependencyGraph() {
         <CreateTaskModal
           isOpen={showCreateTaskModal}
           onClose={() => setShowCreateTaskModal(false)}
-          onCreateTask={handleCreateTask} />
+          onCreateTask={handleCreateTask}
+          teamMembers={teamMembers} 
+        />
       </div>
     </div>
   );
