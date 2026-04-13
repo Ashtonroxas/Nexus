@@ -53,7 +53,7 @@ export default function DependencyGraph() {
   const [project, setProject] = useState(null);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
-  const [projectColor, setProjectColor] = useState("#6366F1");
+  const [projectColor, setProjectColor] = useState("#3b82f6");
 
   // State management for team members fetched from Firestore
   const [teamMembers, setTeamMembers] = useState([]);
@@ -145,7 +145,7 @@ export default function DependencyGraph() {
     const trimmedDescription = projectDescription.trim();
     if (trimmedName === (project.name || "Untitled Project") &&
         trimmedDescription === (project.description || "") &&
-        projectColor === (project.color || "#6366F1")) {
+        projectColor === (project.color || "#3b82f6")) {
           setSaveStatus("saved");
           return;
         }
@@ -568,7 +568,7 @@ export default function DependencyGraph() {
           id: snapshot.id,
           name: data.name || "Untitled Project",
           description: data.description || "",
-          color: data.color || "#6366F1",
+          color: data.color || "#3b82f6",
         };
 
         setProject(projectData);
@@ -829,7 +829,7 @@ export default function DependencyGraph() {
         <div className={styles.floatingToolbar}>
           <button 
             className="btn btn-primary btn-sm" 
-            style={{ backgroundColor: '#6366F1', border: 'none' }}
+            style={{ backgroundColor: '#3b82f6', border: 'none' }}
             onClick={handleOpenCreateTask}
           >
             + Add Task
@@ -854,7 +854,7 @@ export default function DependencyGraph() {
         >
           <Background variant="dots" gap={20} size={1} />
           <Controls />
-          <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.1)" />
+          <MiniMap nodeColor="#3b82f6" maskColor="rgba(0, 0, 0, 0.3)" />
         </ReactFlow>
         
         {/* Conditional popover from the bottom task detail component for selecting tasks on mobile */}

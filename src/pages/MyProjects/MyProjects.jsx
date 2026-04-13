@@ -71,7 +71,7 @@ function MyProjects() {
             dueDate: data.dueDate?.toDate? data.dueDate.toDate() : null,
             updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
             numMembers: memberCount,
-            color: data.color || "#6366F1",
+            color: data.color || "#3b82f6",
           };
         })
       );
