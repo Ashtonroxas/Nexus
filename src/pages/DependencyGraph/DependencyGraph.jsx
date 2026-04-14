@@ -26,11 +26,12 @@ import {
   deleteDoc,
   setDoc,
   getDocs,
-  getDoc // Added getDoc here
+  getDoc
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { useAuth } from "../../firebase/AuthContext";
 import TaskNode from './components/TaskNode/TaskNode';
+import CustomEdge from './components/CustomEdge/CustomEdge'; 
 import CreateTaskModal from './components/CreateTaskModal/CreateTaskModal';
 import TaskDetails from './components/TaskDetails/TaskDetails';
 import { logActivity } from "../../utils/activityLogger";
@@ -45,6 +46,12 @@ export default function DependencyGraph() {
   const [nodes, setNodes ] = useNodesState([]);
   const [edges, setEdges ] = useEdgesState([]);
 
+  // Track which edge the mouse is currently hovering over
+  const [hoveredEdgeId, setHoveredEdgeId] = useState(null);
+
+  // Register our custom edge type
+  const edgeTypes = useMemo(() => ({ custom: CustomEdge }), []);
+
   const { menuButton } = useOutletContext(); // from parent layout
   const { projectId } = useParams();
   const { currentUser } = useAuth(); // Current authenticated user
@@ -53,7 +60,7 @@ export default function DependencyGraph() {
   const [project, setProject] = useState(null);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
-  const [projectColor, setProjectColor] = useState("#3b82f6");
+  const [projectColor, setProjectColor] = useState("#6366F1");
 
   // State management for team members fetched from Firestore
   const [teamMembers, setTeamMembers] = useState([]);
@@ -133,9 +140,7 @@ export default function DependencyGraph() {
     }
   };
 
-  /**
-   * Project and Firestore handlers
-  */
+  /*Project and Firestore handlers*/
 
   // Saves entered project information into firestore - handles exceptions
   // Keeps user informed regarding save status using "saved/saving" label
@@ -145,7 +150,7 @@ export default function DependencyGraph() {
     const trimmedDescription = projectDescription.trim();
     if (trimmedName === (project.name || "Untitled Project") &&
         trimmedDescription === (project.description || "") &&
-        projectColor === (project.color || "#3b82f6")) {
+        projectColor === (project.color || "#6366F1")) { 
           setSaveStatus("saved");
           return;
         }
@@ -218,23 +223,30 @@ export default function DependencyGraph() {
   const handleUpdateTask = async (taskId, updates) => {
     if (!projectId || !taskId) return;
 
-    const assigneeName = (updates.assigneeName ?? "").trim() || "Unassigned";
-    const assigneeInitials = assigneeName !== "Unassigned"
-      ? assigneeName
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((i) => i[0].toUpperCase())
-        .join("")
-      : "--";
+    // Create a base object with the timestamp
+    const firestoreUpdates = {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    };
+
+    // ONLY recalculate and overwrite assignee logic if an assignee update was explicitly passed in
+    if (updates.assigneeName !== undefined) {
+      const assigneeName = updates.assigneeName.trim() || "Unassigned";
+      const assigneeInitials = assigneeName !== "Unassigned"
+        ? assigneeName
+          .split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((i) => i[0].toUpperCase())
+          .join("")
+        : "--";
+
+      firestoreUpdates.assigneeName = assigneeName;
+      firestoreUpdates.assigneeInitials = assigneeInitials;
+    }
 
     try {
-      await updateDoc(doc(db, "projects", projectId, "tasks", taskId), {
-        ...updates,
-        assigneeName,
-        assigneeInitials,
-        updatedAt: serverTimestamp(),
-      });
+      await updateDoc(doc(db, "projects", projectId, "tasks", taskId), firestoreUpdates);
     } catch (error) {
       console.error("Error updating task: ", error);
     }
@@ -343,15 +355,16 @@ export default function DependencyGraph() {
         target: params.target,
         sourceHandle: params.sourceHandle,
         targetHandle: params.targetHandle,
+        type: 'custom', // Use custom edge by default
         animated: false,
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          width: 20,
-          height: 20,
+          width: 14, // Made arrow smaller (from 20)
+          height: 14, // Made arrow smaller (from 20)
         },
         style: {
           stroke: "#6B7280",
-          strokeWidth: 2,
+          strokeWidth: 4, 
         },
       };
 
@@ -418,31 +431,61 @@ export default function DependencyGraph() {
       }
     }, [projectId, setEdges]);
 
-  // apply animations and styling 
+  // Delete an edge function passed to the custom hover button
+  const handleDeleteEdge = useCallback(async (edgeId) => {
+    if (!projectId || !edgeId) return;
+    try {
+      await deleteDoc(doc(db, "projects", projectId, "edges", edgeId));
+    } catch (error) {
+      console.error("Error deleting edge via hover button: ", error);
+    }
+  }, [projectId]);
+
+  // Double click deletion (Kept as a convenient fallback)
+  const onEdgeDoubleClick = useCallback(async (event, edge) => {
+    if (!projectId || !edge.id) return;
+    handleDeleteEdge(edge.id);
+  }, [projectId, handleDeleteEdge]);
+
+  // apply animations, styling, and custom data properties
   const edgesWithDynamicStyles = useMemo(() => {
     return edges.map((edge) => {
       const sourceNode = nodes.find((n) => n.id === edge.source);
       
       // check if the source node (where the arrow starts) is severe
       const isSevere = sourceNode?.data?.complexity?.toLowerCase() === "severe";
-        
       const isSourceDone = sourceNode?.data?.status?.toLowerCase() === "done";
 
       // Determine the color and thickness
       let edgeColor = "#6B7280"; 
-      let edgeWidth = 2;
+      let edgeWidth = 4; 
 
-      // Check if it's done FIRST
       if (isSourceDone) {
-        edgeColor = "#22C55E"; // Green for completed dependency 
-        edgeWidth = 2; // Resetting width to standard for completed tasks
+        edgeColor = "#22C55E"; 
+        edgeWidth = 4; 
       } else if (isSevere) {
-        edgeColor = "#EF4444"; // Red for severe bottleneck
-        edgeWidth = 1;
+        edgeColor = "#EF4444"; 
+        edgeWidth = 4; // Changed from 2 to 4 so it matches all other arrows
       }
+
+      if (edge.selected) {
+        edgeColor = "#6366F1"; 
+        edgeWidth = 6;         
+      }
+
       return {
         ...edge,
-        animated: true, // Keep the motion animation on
+        type: 'custom', // Bind to our custom edge component
+        animated: true, 
+        data: {
+          ...edge.data,
+          onDelete: handleDeleteEdge,
+          isHovered: hoveredEdgeId === edge.id,
+          isSelected: edge.selected,
+          // Methods to trigger hover state from within the HTML button label itself
+          onHoverEnter: () => setHoveredEdgeId(edge.id),
+          onHoverLeave: () => setHoveredEdgeId(null),
+        },
         style: {
           ...edge.style,
           stroke: edgeColor,
@@ -454,9 +497,9 @@ export default function DependencyGraph() {
         },
       };
     });
-  }, [edges, nodes]);
+  }, [edges, nodes, hoveredEdgeId, handleDeleteEdge]);
 
-  // -- Porject Summary Helper Functions -- //
+  // -- Project Summary Helper Functions -- //
 
   // Update firestore with tasks marked as done for progress usage
   const updateProjectTaskInfo = useCallback(
@@ -568,7 +611,7 @@ export default function DependencyGraph() {
           id: snapshot.id,
           name: data.name || "Untitled Project",
           description: data.description || "",
-          color: data.color || "#3b82f6",
+          color: data.color || "#6366F1",
         };
 
         setProject(projectData);
@@ -694,15 +737,16 @@ export default function DependencyGraph() {
           target: data.target,
           sourceHandle: data.sourceHandle || null,
           targetHandle: data.targetHandle || null,
+          type: 'custom',
           animated: false,
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
+            width: 14, // Made arrow smaller
+            height: 14, // Made arrow smaller
           },
           style: {
             stroke: "#6B7280",
-            strokeWidth: 2,
+            strokeWidth: 4, 
           },
         };
       });
@@ -829,7 +873,7 @@ export default function DependencyGraph() {
         <div className={styles.floatingToolbar}>
           <button 
             className="btn btn-primary btn-sm" 
-            style={{ backgroundColor: '#3b82f6', border: 'none' }}
+            style={{ backgroundColor: '#6366F1', border: 'none' }}
             onClick={handleOpenCreateTask}
           >
             + Add Task
@@ -841,9 +885,14 @@ export default function DependencyGraph() {
           nodes={nodes} 
           edges={edgesWithDynamicStyles}
           nodeTypes={nodeTypes} 
+          edgeTypes={edgeTypes} /* Registered Custom Edge Types */
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
+          onEdgeDoubleClick={onEdgeDoubleClick} 
+          /* Hover events to track which edge is active */
+          onEdgeMouseEnter={(_, edge) => setHoveredEdgeId(edge.id)}
+          onEdgeMouseLeave={() => setHoveredEdgeId(null)}
           defaultViewport={{x: 0, y: 0, zoom: 0.7}}
           onNodeClick={(event, node) => {
             setSelectedTaskId(node.id);
@@ -854,7 +903,7 @@ export default function DependencyGraph() {
         >
           <Background variant="dots" gap={20} size={1} />
           <Controls />
-          <MiniMap nodeColor="#3b82f6" maskColor="rgba(0, 0, 0, 0.3)" />
+          <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.3)" />
         </ReactFlow>
         
         {/* Conditional popover from the bottom task detail component for selecting tasks on mobile */}
