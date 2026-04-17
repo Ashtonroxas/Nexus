@@ -204,8 +204,8 @@ export default function DependencyGraph() {
         updatedAt: serverTimestamp(),
 
         position: {
-          x: 120 + nodes.length * 40,
-          y: 140 + nodes.length * 20,
+          x: 120 + nodes.length * 260,
+          y: 140 + nodes.length * 120,
         },
       }); 
 
