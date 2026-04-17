@@ -139,6 +139,19 @@ function MyProjects() {
     return 0;
   });
 
+  // Helper to return name of sort type
+  const getSortType = (sortTerm) => {
+  if (sortBy === "recent") {
+    return "Recently Edited"
+  }
+  if (sortBy === "dueDate") {
+    return "Approaching Deadline"
+  }
+  if (sortBy === "progress") {
+    return "Most Progress"
+  }
+}
+
   // Filter the sorted projects based on the search term. Checks case-insensitively and 
   // looks for matches in project name and description
   const filteredProjects = sortedProjects.filter((project) => {
@@ -175,8 +188,9 @@ function MyProjects() {
               <p>
                 View and manage all your projects • 
                 {searchTerm.trim()
-                  ? ` ${filteredProjects.length} matching project${filteredProjects.length !== 1 ? "s" : ""}`
-                  : ` ${numProjects} active project${numProjects !== 1 ? "s" : ""}`}
+                  ? ` ${filteredProjects.length} matching project${filteredProjects.length !== 1 ? "s " : " "}`
+                  : ` ${numProjects} active project${numProjects !== 1 ? "s " : " "}`}
+              • {`${getSortType(sortBy)}`}
                   </p>
             </div>
           </div>
