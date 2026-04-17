@@ -82,6 +82,7 @@ export default function DependencyGraph() {
 
   // 768 screen limit for screensize differentiation
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const positionField = isMobile ? "positionMobile" : "positionDesktop";
 
   // Fetch Team Members specifically invited to this project
   useEffect(() => {
@@ -203,10 +204,14 @@ export default function DependencyGraph() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
 
-        position: {
+        positionDesktop: {
           x: 120 + nodes.length * 260,
           y: 140 + nodes.length * 120,
         },
+        positionMobile: {
+          x: 40 + nodes.length * 140,
+          y: 100 + nodes.length * 100,
+        }
       }); 
 
       // Log activity for task creation
@@ -402,7 +407,7 @@ export default function DependencyGraph() {
       for (const change of positionChanges) {
         try {
           await updateDoc(doc(db, "projects", projectId, "tasks", change.id), {
-            position: {
+            [positionField]: {
               x: change.position.x,
               y: change.position.y,
             },
@@ -412,7 +417,7 @@ export default function DependencyGraph() {
           console.error("Error saving node position: ", error);
         }
       }
-    }, [projectId, setNodes]);
+    }, [projectId, setNodes, positionField]);
 
   // handle removing edges between nodes by updating firestore
   const handleEdgesChange = useCallback(
@@ -669,13 +674,17 @@ export default function DependencyGraph() {
       const firestoreNodes = snapshot.docs.map((taskDoc, index) => {
         const data = taskDoc.data();
 
+        const savedPosition = isMobile
+          ? data.positionMobile
+          : data.positionDesktop;
+
         return {
           id: taskDoc.id,
           type: "taskNode",
           selected: taskDoc.id === selectedTaskId,
           position: {
-            x: data.position?.x ?? 120 + index * 260,
-            y: data.position?.y ?? 140,
+            x: savedPosition?.x ?? (isMobile ? 40 + index * 140 : 120 + index * 260),
+            y: savedPosition?.y ?? (isMobile ? 100 + index * 100 : 140 + index * 120),
           },
 
           data: {
@@ -708,7 +717,8 @@ export default function DependencyGraph() {
       updateProjectDeadline, 
       updateProjectTaskInfo,
       selectedTaskId,
-      checkApproachingDeadlines
+      checkApproachingDeadlines,
+      isMobile
     ]);
   
   // Syncing selected task for UI state management
@@ -912,7 +922,9 @@ export default function DependencyGraph() {
         >
           <Background variant="dots" gap={20} size={1} />
           <Controls />
-          <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.3)" />
+          {!isMobile && (
+            <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.3)" />
+          )}
         </ReactFlow>
         
         {/* Conditional popover from the bottom task detail component for selecting tasks on mobile */}
