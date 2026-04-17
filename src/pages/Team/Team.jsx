@@ -1,10 +1,26 @@
 import { useEffect, useState } from "react";
 import { useParams, useOutletContext } from "react-router-dom"; 
 import { useAuth } from "../../firebase/AuthContext";
-import { collection, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { 
+  collection,
+  onSnapshot, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  arrayUnion, 
+  arrayRemove,
+  getDocs,
+  query,
+  where,
+  serverTimestamp,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import styles from './Team.module.css';
-import AddModal from "../../components/AddModal/AddModal";
+import AddModal from "./components/AddModal/AddModal.jsx";
 import TeamMenu from "../../components/TeamMenu/TeamMenu.jsx";
 
 //Import the activity logger
@@ -37,32 +53,42 @@ function Team() {
   // State for Add Member Modal
   const [showAddModal, setShowAddModal] = useState(false);
 
+  const [suggestions, setSuggestions] = useState([]);
+
   // Handlers for Add Member Modal
   const handleCloseAddModal = () => setShowAddModal(false);
   const handleShowAddModal = () => setShowAddModal(true);
 
   // Invite Team Member
-  const handleConfirmAdd = async ({ user, role }) => {
-    if (!user) return;
+  const handleConfirmAdd = async ({ email, role }) => {
+    const cleanedEmail = email.trim().toLowerCase();
+    if (!cleanedEmail) return;
+
     try {
-      console.log('Inviting user:', {
-        userId: user.uid,
-        userName: user.displayName,
-        projectId,
-        role
-      });
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", cleanedEmail));
+      const snapshot = await getDocs(q);
 
-      // Add the user to the projects/{projectId}/members collection
+      if (snapshot.empty) {
+        return;
+      }
+
+      const userDoc = snapshot.docs[0];
+      const userData = userDoc.data();
+      const user = {
+        uid: userDoc.id,
+        ...userData,
+      };
+
       await setDoc(doc(db, "projects", projectId, "members", user.uid), {
-        role: role
-      });
-      
-      //Add their ID to the project's memberIds array so it shows on their dashboard
-      await updateDoc(doc(db, "projects", projectId), {
-        memberIds: arrayUnion(user.uid)
+        role: role,
       });
 
-      //Trigger the activity logger for the invite!
+      await updateDoc(doc(db, "projects", projectId), {
+        memberIds: arrayUnion(user.uid),
+      });
+
+      //Trigger the activity logger for the invite
       console.log('About to log invite activity...');
       await logActivity(projectId, 'invite', {
         senderName: currentUser.displayName || "A team member",
@@ -71,6 +97,18 @@ function Team() {
         status: 'pending' // Gives them the Accept/Decline buttons
       });
       console.log('Invite activity logged!');
+
+      // Write docs of previously invited member history
+      await setDoc(doc(db, "users", currentUser.uid, "inviteHistory", user.uid),
+        {
+          uid: user.uid,
+          displayName: user.displayName || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Unknown User",
+          email: user.email || cleanedEmail,
+          imgURL: user.imgURL || "",
+          lastInteractedAt: serverTimestamp(),
+        },
+        { merge: true }
+    );
 
       handleCloseAddModal();
     } catch (error) {
@@ -165,6 +203,25 @@ function Team() {
 
     return () => unsubscribe();
   }, [projectId, currentUser]);
+
+  // Loading history of interacted with users for suggestions
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    const historyRef = collection(db, "users", currentUser.uid, "inviteHistory");
+    const historyQuery = query(historyRef, orderBy("lastInteractedAt", "desc"), limit(6));
+
+    const unsubscribe = onSnapshot(historyQuery, (snapshot) => {
+      const history = snapshot.docs.map((docSnap) => ({
+        uid: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      setSuggestions(history);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   return (
     <div className={styles.contentContainer}>
@@ -266,8 +323,9 @@ function Team() {
         title="Add Member"
         confirmText="Send Invite"
         cancelText="Cancel"
-        // exclude existing members
-        excludeUids={new Set(members.map((m) => m.userId))}
+        suggestions={suggestions.filter(
+          (suggestion) => !members.some((member) => member.userId === suggestion.uid)
+        )}
       />
     </div>
   );
