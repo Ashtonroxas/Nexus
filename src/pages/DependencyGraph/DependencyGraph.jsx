@@ -35,6 +35,7 @@ import CustomEdge from './components/CustomEdge/CustomEdge';
 import CreateTaskModal from './components/CreateTaskModal/CreateTaskModal';
 import TaskDetails from './components/TaskDetails/TaskDetails';
 import { logActivity } from "../../utils/activityLogger";
+import { createsCycle } from '../../utils/graphUtils';
 import styles from './DependencyGraph.module.css';
 
 const nodeTypes = { 
@@ -354,6 +355,13 @@ export default function DependencyGraph() {
     async (params) => {
       if (!projectId || !params.source || !params.target) return;
 
+      // Validity checks (edge already exists/cycle paths)
+      const edgeExists = edges.some(
+        (edge) => edge.source === params.source && edge.target === params.target //check if matching edge already there
+      );
+      if (edgeExists) return;
+      if (createsCycle(nodes, edges, params.source, params.target)) return; // checks for cyclic path
+
       const edgeId = `edge-${params.source}-${params.target}`;
       const newEdge = {
         id: edgeId,
@@ -390,7 +398,7 @@ export default function DependencyGraph() {
       } catch (error) {
         console.error("Error saving edge: ", error);
       }
-    }, [projectId, setEdges]);
+    }, [projectId, setEdges, edges, nodes]);
 
     // Function updates stored node coordinates upon any UI position changes
     // - dragging in this case
