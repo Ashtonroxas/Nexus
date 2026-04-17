@@ -168,7 +168,6 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                 }
                 onClick={handleNav}
               >
-                <Bell size={18} />
                 Activity Feed
               </NavLink> 
             </nav>

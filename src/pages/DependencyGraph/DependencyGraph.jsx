@@ -71,7 +71,8 @@ export default function DependencyGraph() {
 
   // Project color display
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const pickerRef = useRef(null);
+  const desktopPickerRef = useRef(null);
+  const mobilePickerRef = useRef(null);
 
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   
@@ -589,7 +590,10 @@ export default function DependencyGraph() {
   // Allowing user to escape color wheel by clicking anywhere else on the page
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+      const clickedDesktopPicker = desktopPickerRef.current && desktopPickerRef.current.contains(e.target);
+      const clickedMobilePicker = mobilePickerRef.current && mobilePickerRef.current.contains(e.target);
+
+      if (!clickedDesktopPicker && !clickedMobilePicker) {
         setShowColorPicker(false);
       }
     };
@@ -603,6 +607,8 @@ export default function DependencyGraph() {
 
   // Project information firestore listener
   useEffect(() => {
+    if (!projectId) return;
+
     const unsubscribe = onSnapshot(doc(db, "projects", projectId), (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
@@ -615,10 +621,13 @@ export default function DependencyGraph() {
         };
 
         setProject(projectData);
-        setProjectName((prev) => (hasLoadedProject ? prev : projectData.name));
-        setProjectDescription((prev) => (hasLoadedProject? prev : projectData.description));
-        setProjectColor(projectData.color);
-        setHasLoadedProject(true);
+
+        if (!hasLoadedProject) {
+          setProjectName((prev) => (hasLoadedProject ? prev : projectData.name));
+          setProjectDescription((prev) => (hasLoadedProject? prev : projectData.description));
+          setProjectColor(projectData.color);
+          setHasLoadedProject(true);
+        }
       }
     });
 
@@ -777,7 +786,7 @@ export default function DependencyGraph() {
 
             {/* Project color settings dot */}
             <div className={styles.desktopDetailsRow}>
-              <div ref={pickerRef} className={styles.colorPickerWrapper}>
+              <div ref={desktopPickerRef} className={styles.colorPickerWrapper}>
                 <div
                   className={styles.colorDot}
                   style={{ backgroundColor: projectColor }}
@@ -836,7 +845,7 @@ export default function DependencyGraph() {
           {/* Description row includes conditional hex color picker rendering and editable desctiption
           field text area */}
           <div className={styles.mobileDescriptionRow}>
-              <div ref={pickerRef} className={styles.colorPickerWrapper}>
+              <div ref={mobilePickerRef} className={styles.colorPickerWrapper}>
                 <div
                   className={styles.colorDot}
                   style={{ backgroundColor: projectColor }}
