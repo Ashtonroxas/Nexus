@@ -30,11 +30,32 @@
 .taskNodeSelected {
   box-shadow: 0 0 0 2px var(--selected-tasknode-shadow);
 }
+
 .handle {
-  width: 16px; /* Increased from 10px */
-  height: 16px; /* Increased from 10px */
-  background: var(--stroke-solid);
-  border: 2px solid #FFFFFF;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+}
+.handle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-left: 14px solid var(--stroke-solid);
+}
+.handleSource {
+  right: -14px;
+}
+.handleTarget {
+  left: -14px;
 }
 
 /* Header for task code and title */
