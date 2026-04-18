@@ -7,6 +7,7 @@ import AuthPage from './pages/Auth/AuthPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Team from './pages/Team/Team';
 import ActivityFeed from './pages/ActivityFeed/ActivityFeed'; 
+import RiskReport from './pages/RiskReport/RiskReport';
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
 
           <Route path="/projects/:projectId" element={<DependencyGraph />} />
-          <Route path="/projects/:projectId/report" element={<div>Coming Soon</div>} />
+          <Route path="/projects/:projectId/report" element={<RiskReport />} />
           <Route path="/projects/:projectId/team" element={<Team />} />
 
           <Route path="/*" element={<Navigate to="/projects" replace />} />

@@ -1,15 +1,6 @@
 :root {
   --tasknode-shadow: #1018280F;
   --selected-tasknode-shadow: #6366F1;
-  --severe-background: #FFAAA780;
-  --severe-color: #FD4D4D;
-  --high-background: #FFC48D80;
-  --high-color: #D97706;
-  --medium-background: #FEF3C780;
-  --medium-color: #F6AB29;
-  --low-background:#B2F0C380;
-  --low-color:#5CBD7F;
-
   --info-text-color: #4B5563
 }
 
