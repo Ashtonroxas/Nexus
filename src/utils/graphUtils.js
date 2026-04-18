@@ -4,11 +4,11 @@
  * If reached, then a cycle exists in the graph. Ensures that the graph is a 
  * Directed Acyclic Graph - a requirement for the critical path traversals for Honors Project
  * submission
- * @param {*} nodes 
- * @param {*} edges 
- * @param {*} sourceId 
- * @param {*} targetId 
- * @return {boolean} 
+ * @param {Array} nodes 
+ * @param {Array} edges 
+ * @param {string} sourceId 
+ * @param {string} targetId 
+ * @returns {boolean} 
  */
 export function createsCycle(nodes, edges, sourceId, targetId) {
   if (sourceId === targetId) return true; // self loop check
@@ -47,4 +47,75 @@ export function createsCycle(nodes, edges, sourceId, targetId) {
   }
 
   return false;
+}
+
+/**
+ * Helper function to convert a task's complexity into a weight
+ * to be used for its edges
+ * 
+ * @param {string} complexity
+ * @returns {number}
+ */
+export function complexityToWeight(complexity) {
+  switch ((complexity || "").toLowerCase()) {
+    case "severe":
+      return 5;
+    case "high":
+      return 3;
+    case "medium":
+      return 2;
+    case "low":
+      return 1;
+  }
+}
+
+/**
+ * Takes arrays of tasks and edges and returns a map data structure
+ * as an internal representation of the Nexus dependency graph. Returns
+ * relevant information about the graph including, a task map, an outgoing 
+ * adjacency map, an incoming adjacency map, and the indegree (as prereqs for task)
+ * 
+ * @param {Array} tasks
+ * @param {Array} edges
+ * @returns {{
+ *  taskMap: Map,
+ *  outgoing: Map,
+ *  incoming: Map,
+ *  indegree: Map
+ * }}
+ */
+export function buildGraph(tasks, edges) {
+  const taskMap = new Map();
+  const outgoing = new Map();
+  const incoming = new Map();
+  const indegree = new Map();
+
+  tasks.forEach((task) => {
+    taskMap.set(task.id, {
+      ...task,
+      weight: complexityToWeight(task.complexity),
+    }); // same task info plus derived weight
+    
+    // Empty initialized maps
+    outgoing.set(task.id, []);
+    incoming.set(task.id, []);
+    indegree.set(task.id, 0);
+  });
+
+  // Populating the outgoing
+  edges.forEach((edge) => {
+    const { source, target } = edge;
+    if (!taskMap.has(source) || !taskMap.has(target)) return; // fixing bug with invalid edges
+    
+    outgoing.get(source).push(target);
+    incoming.get(target).push(source);
+    indegree.set(target, indegree.get(target) + 1);
+  });
+
+  return {
+    taskMap,
+    outgoing,
+    incoming,
+    indegree,
+  };
 }
