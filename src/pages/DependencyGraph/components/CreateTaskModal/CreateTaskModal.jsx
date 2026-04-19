@@ -14,6 +14,7 @@ const INITIAL = {
   title: "",
   description: "",
   assignee: "",
+  assigneeId: "",
   dueDate: "",
   status: "To Do",
   complexity: "Low",
@@ -53,6 +54,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask, teamMembers = [] }) {
     const trimTitle = form.title.trim();
     const trimDesc = form.description.trim();
     const trimAssignee = form.assignee.trim();
+    const trimAssigneeId = form.assigneeId.trim() || "";
 
     if (!trimTitle) return;
 
@@ -60,6 +62,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask, teamMembers = [] }) {
       title: trimTitle,
       description: trimDesc,
       assignee: trimAssignee,
+      assigneeId: trimAssigneeId,
       dueDate: form.dueDate,
       status: form.status,
       complexity: form.complexity,
@@ -171,6 +174,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask, teamMembers = [] }) {
                     className={styles.dropdownItem}
                     onClick={() => {
                       handleChange("assignee", "");
+                      handleChange("assigneeId", "");
                       setShowAssigneeDropdown(false);
                     }}
                   >
@@ -182,6 +186,7 @@ function CreateTaskModal({ isOpen, onClose, onCreateTask, teamMembers = [] }) {
                       className={styles.dropdownItem}
                       onClick={() => {
                         handleChange("assignee", member.name);
+                        handleChange("assigneeId", member.id);
                         setShowAssigneeDropdown(false);
                       }}
                     >

@@ -5,7 +5,8 @@ import {
   doc,
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  getDoc
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { buildRiskReport } from "../../utils/graphAnalysis";
@@ -13,6 +14,7 @@ import { CalendarDays, AlertTriangle, Mail, Share2, ArrowDown } from "lucide-rea
 import StatCard from "./components/StatCard";
 import styles from "./RiskReport.module.css";
 import { IoMdReturnLeft } from "react-icons/io";
+import { DiVim } from "react-icons/di";
 
 function RiskReport() {
   const { projectId } = useParams();
@@ -21,6 +23,7 @@ function RiskReport() {
   const [report, setReport] = useState(null);
   const [projectName, setProjectName] = useState("Loading...");
   const [projectDueDate, setProjectDueDate] = useState(null);
+  const [usersMap, setUsersMap] = useState(new Map());
 
   // Helper format functions for date and complexity class styling
   const formatDate = (dateString) => {
@@ -64,6 +67,25 @@ function RiskReport() {
 
   const handleExport = () => {
     window.print();
+  };
+
+  const handleEmail = (task) => {
+    const user = usersMap.get(task.assigneeId);
+    const email = user?.email || "";
+    const subject = `Reminder: ${task.title}`;
+    const body = `
+      Hi ${user?.displayName || task.assigneeName || "there"},
+
+      Quick reminder about:
+
+      ${task.taskCode}: ${task.title}
+      ${task.slack === 0 ? "This task is on the critical path." : ""}
+
+      It is due by ${task.dueDate}.
+    `;
+
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoLink, "_blank");
   };
 
   // Fetching project name from firestore
@@ -144,6 +166,33 @@ function RiskReport() {
       unsubscribeEdges();
     };
   }, [projectId]);
+
+  // Fetching the project member user information
+  useEffect(() => {
+    if (!projectId) return;
+
+    const membersRef = collection(db, "projects", projectId, "members");
+    const unsubscribe = onSnapshot(membersRef, async (snapshot) => {
+      const memberDocs = snapshot.docs.map((doc) => ({
+        userId: doc.id,
+      }));
+
+      const userMap = new Map();
+
+      await Promise.all(
+        memberDocs.map(async ({ userId }) => {
+          const userSnap = await getDoc(doc(db, "users", userId));
+          if (userSnap.exists()) {
+            userMap.set(userId, userSnap.data());
+          } 
+        })
+      );
+
+      setUsersMap(userMap);
+    });
+
+    return () => unsubscribe();
+  }, [projectId]);
  
   const daysToDeadline = getDaysToDeadline(projectDueDate);
   if (!report) return null;
@@ -159,7 +208,7 @@ function RiskReport() {
       {/* Overview and description of page + export button */}
       <header className={styles.reportHeader}>
         <div className={styles.titleSection}>
-          <h2 className={styles.pageTitle}>Overview</h2>
+          <h2 className={styles.pageTitle}>Risk Report</h2>
           <p className={styles.pageSubtitle}>{projectName}</p>
         </div>
 
@@ -206,6 +255,8 @@ function RiskReport() {
                       <button
                         type="button"
                         className={styles.mailButton}
+                        onClick={() => handleEmail(task)}
+                        disabled={!task.assigneeId && !task.assigneeName}
                       >
                         <Mail size={18} />
                       </button>

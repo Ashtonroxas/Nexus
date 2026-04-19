@@ -25,6 +25,7 @@ function TaskDetails({
   const [status, setStatus] = useState("To Do");
   const [complexity, setComplexity] = useState("Low");
   const [assigneeName, setAssigneeName] = useState("");
+  const [assigneeId, setAssigneeId] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [openDropdown, setOpenDropdown] = useState(null);
 
@@ -42,6 +43,7 @@ function TaskDetails({
     setStatus(task.status || "To Do");
     setComplexity(task.complexity || "Low");
     setAssigneeName(task.assigneeName || "");
+    setAssigneeId(task.assigneeId || "");
     setDueDate(task.dueDate || "");
     setOpenDropdown(null);
   }, [task]);
@@ -304,7 +306,11 @@ function TaskDetails({
                   className={styles.dropdownItem}
                   onClick={() => {
                     setAssigneeName("");
-                    saveField({ assigneeName: "" });
+                    setAssigneeId("");
+                    saveField({ 
+                      assigneeName: "",
+                      assigneeId: "",
+                    });
                     setOpenDropdown(null);
                   }}
                 >
@@ -317,7 +323,11 @@ function TaskDetails({
                     className={styles.dropdownItem}
                     onClick={() => {
                       setAssigneeName(member.name);
-                      saveField({ assigneeName: member.name });
+                      setAssigneeId(member.id);
+                      saveField({ 
+                        assigneeName: member.name,
+                        assigneeId: member.id,
+                      });
                       setOpenDropdown(null);
                     }}
                   >

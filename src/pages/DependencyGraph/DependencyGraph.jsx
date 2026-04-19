@@ -198,6 +198,7 @@ export default function DependencyGraph() {
         title: taskFormData.title,
         description: taskFormData.description,
         assigneeName,
+        assigneeId: taskFormData.assigneeId || "",
         assigneeInitials,
         status: taskFormData.status,
         complexity: taskFormData.complexity,
@@ -250,6 +251,7 @@ export default function DependencyGraph() {
 
       firestoreUpdates.assigneeName = assigneeName;
       firestoreUpdates.assigneeInitials = assigneeInitials;
+      firestoreUpdates.assigneeId = updates.assigneeId || "";
     }
 
     try {
@@ -700,6 +702,7 @@ export default function DependencyGraph() {
             title: data.title || "Untitled Task",
             description: data.description || "",
             assigneeName: data.assigneeName || "Unassigned",
+            assigneeId: data.assigneeId || "",
             assigneeInitials: data.assigneeInitials || "--",
             status: data.status || "To Do",
             complexity: data.complexity || "Low",
