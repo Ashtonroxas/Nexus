@@ -1,54 +1,26 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
+import { 
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  orderBy
+} from "firebase/firestore";
+import { db } from "../../firebase/firebase";
+import { buildRiskReport } from "../../utils/graphAnalysis";
 import { CalendarDays, AlertTriangle, Mail, Share2, ArrowDown } from "lucide-react";
 import StatCard from "./components/StatCard";
 import styles from "./RiskReport.module.css";
+import { IoMdReturnLeft } from "react-icons/io";
 
 function RiskReport() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { menuButton } = useOutletContext();
-
-  const report = useMemo(
-    () => ({
-      projectName: "Website Redesign",
-      subtitle:
-        "Analyze project bottlenecks and scheduling based on task dependency and complexity",
-      criticalPath: [
-        {
-          id: "1",
-          taskCode: "TASK-101",
-          title: "Generate Design Prototype",
-          complexity: "Low",
-          dueDate: "2026-02-14",
-          assigneeInitials: "AR",
-          isBottleneck: false,
-        },
-        {
-          id: "2",
-          taskCode: "TASK-103",
-          title: "Authentication & Permission",
-          complexity: "Severe",
-          dueDate: "2026-02-16",
-          assigneeInitials: "TN",
-          isBottleneck: true,
-        },
-        {
-          id: "3",
-          taskCode: "TASK-104",
-          title: "Quality Assurance",
-          complexity: "High",
-          dueDate: "2026-02-22",
-          assigneeInitials: "AB",
-          isBottleneck: false,
-        },
-      ],
-      daysToDeadline: 3,
-      slackTasks: 1,
-      zeroSlackTasks: 3
-    }),
-    []
-  );
+  const [report, setReport] = useState(null);
+  const [projectName, setProjectName] = useState("Loading...");
+  const [projectDueDate, setProjectDueDate] = useState(null);
 
   // Helper format functions for date and complexity class styling
   const formatDate = (dateString) => {
@@ -69,10 +41,112 @@ function RiskReport() {
         return styles.lowPill;
     }
   };
+  const getDaysToDeadline = (dueDateValue) => {
+    if (!dueDateValue) return "--";
+
+    const dueDate = 
+      typeof dueDateValue?.toDate === "function"
+        ? dueDateValue.toDate()
+        : new Date(dueDateValue);
+
+    if (isNaN(dueDate.getTime())) return "--";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+    const ms = dueDate.getTime() - today.getTime();
+    const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
+
+    if (days < 0) return "Overdue";
+
+    return days;
+  };
 
   const handleExport = () => {
     window.print();
   };
+
+  // Fetching project name from firestore
+  useEffect(() => {
+    if (!projectId) return;
+
+    const unsubscribe = onSnapshot(doc(db, "projects", projectId), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setProjectName(data.name || "Untitled Project");
+        setProjectDueDate(data.dueDate || null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [projectId]);
+
+  // Fetching firestore tasks/edges and building risk report
+  useEffect(() => {
+    if (!projectId) return;
+
+    const tasksRef = collection(db, "projects", projectId, "tasks");
+    const tasksQuery = query(tasksRef, orderBy("createdAt", "asc"));
+    const edgesRef = collection(db, "projects", projectId, "edges");
+
+    let latestTasks = [];
+    let latestEdges = [];
+
+    const updateReport = () => {
+      if (latestTasks.length === 0) {
+        setReport({
+          criticalPath: [],
+          slackTasks: 0,
+          zeroSlackTasks: 0,
+          primaryBottleneck: null,
+          projectDuration: 0,
+        });
+        return;
+      }
+
+      try {
+        const analyzedReport = buildRiskReport(latestTasks, latestEdges);
+        setReport({
+          ...analyzedReport,
+        });
+      } catch (error) {
+        console.error("Error building risk report: ", error);
+        setReport({
+          criticalPath: [],
+          slackTasks: 0,
+          zeroSlackTasks: 0,
+          primaryBottleneck: null,
+          projectDuration: 0
+        });
+      }
+    };
+
+    const unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
+      latestTasks = snapshot.docs.map((taskDoc) => ({
+        id: taskDoc.id,
+        ...taskDoc.data(),
+      }));
+
+      updateReport();
+    });
+
+    const unsubscribeEdges = onSnapshot(edgesRef, (snapshot) => {
+      latestEdges = snapshot.docs.map((edgeDoc) => ({
+        id: edgeDoc.id,
+        ...edgeDoc.data(),
+      }));
+
+      updateReport();
+    });
+
+    return () => {
+      unsubscribeTasks();
+      unsubscribeEdges();
+    };
+  }, [projectId]);
+ 
+  const daysToDeadline = getDaysToDeadline(projectDueDate);
+  if (!report) return null;
 
   return (
     <div className={styles.contentContainer}>
@@ -86,7 +160,7 @@ function RiskReport() {
       <header className={styles.reportHeader}>
         <div className={styles.titleSection}>
           <h2 className={styles.pageTitle}>Overview</h2>
-          <p className={styles.pageSubtitle}>{report.subtitle}</p>
+          <p className={styles.pageSubtitle}>{projectName}</p>
         </div>
 
         <button className={styles.exportBtn} onClick={handleExport}>
@@ -118,7 +192,7 @@ function RiskReport() {
 
                 {/** Highest weight task marked as primary bottlenexk */}
                 <div className={styles.taskRight}>
-                  {task.isBottleneck && (
+                  {report.primaryBottleneck?.id === task.id && (
                     <div className={styles.bottleneck}>
                         <AlertTriangle size={28} />
                         <span> Primary Project Bottleneck </span>
@@ -156,7 +230,7 @@ function RiskReport() {
       <section className={styles.statsGrid}>
         <StatCard
           title="Days to Deadline"
-          value={report.daysToDeadline}
+          value={daysToDeadline}
           valueClassName={styles.deadlineValue}
           className={styles.statCard}
         />
