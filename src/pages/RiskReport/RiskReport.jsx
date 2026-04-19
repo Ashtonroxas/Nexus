@@ -10,11 +10,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import { buildRiskReport } from "../../utils/graphAnalysis";
+import { exportRiskReportPdf } from "../../utils/exportRiskReportPdf";
 import { CalendarDays, AlertTriangle, Mail, Share2, ArrowDown } from "lucide-react";
 import StatCard from "./components/StatCard";
 import styles from "./RiskReport.module.css";
-import { IoMdReturnLeft } from "react-icons/io";
-import { DiVim } from "react-icons/di";
 
 function RiskReport() {
   const { projectId } = useParams();
@@ -66,7 +65,11 @@ function RiskReport() {
   };
 
   const handleExport = () => {
-    window.print();
+    exportRiskReportPdf({
+      projectName,
+      report,
+      daysToDeadline
+    });
   };
 
   const handleEmail = (task) => {
