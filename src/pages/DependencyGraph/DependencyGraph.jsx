@@ -925,9 +925,11 @@ export default function DependencyGraph() {
           onEdgeMouseLeave={() => setHoveredEdgeId(null)}
           defaultViewport={{x: 0, y: 0, zoom: 0.7}}
           onNodeClick={(event, node) => {
+            setShowColorPicker(false);
             setSelectedTaskId(node.id);
           }}
           onPaneClick={() => {
+            setShowColorPicker(false);
             setSelectedTaskId(null);
           }}
         >
