@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Bell, UserPlus, CheckCircle, Clock, X, Check, PlusCircle, Trash2, CalendarClock } from 'lucide-react';
-import { collectionGroup, query, where, orderBy, onSnapshot, updateDoc, writeBatch, doc, setDoc, collection, arrayUnion } from 'firebase/firestore';
+import { Bell, UserPlus, CheckCircle, Clock, X, Check, PlusCircle, Trash2, CalendarClock, UserMinus } from 'lucide-react';
+import { collectionGroup, query, where, orderBy, onSnapshot, updateDoc, writeBatch, doc, setDoc, collection, arrayUnion, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase';
 import { useAuth } from '../../firebase/AuthContext';
 import styles from './ActivityFeed.module.css';
@@ -78,18 +78,35 @@ export default function ActivityFeed() {
       // Extract projectId from the notification ref path (projects/projectId/activities/docId)
       const projectId = notif.ref.path.split('/')[1];
       
-      // Update the activity document with the response
+      //Update the activity document with the response
       await updateDoc(notif.ref, { 
         status: response, 
         read: true 
       });
 
-      // If accepted, add user to the project's members
+      // Fetch the actual invitation doc to get the correct role (Admin vs Member)
+      let assignedRole = "member"; // default fallback
+      if (notif.inviteId) {
+        const inviteRef = doc(db, "invitations", notif.inviteId);
+        const inviteSnap = await getDoc(inviteRef);
+        
+        if (inviteSnap.exists()) {
+          assignedRole = inviteSnap.data().role || "member";
+          
+          // Update the original invitation document so the database stays clean
+          await updateDoc(inviteRef, {
+            status: response,
+            updatedAt: new Date() 
+          });
+        }
+      }
+
+      // If accepted, add user to the project's members with the CORRECT role
       if (response === 'accepted') {
         // Add to members subcollection
         await setDoc(doc(db, "projects", projectId, "members", currentUser.uid), {
           userId: currentUser.uid,
-          role: "member",
+          role: assignedRole, // Uses the actual assigned role now!
           joinedAt: new Date(),
         });
 
@@ -127,6 +144,8 @@ export default function ActivityFeed() {
         return <div className={`${styles.iconWrapper}`} style={{ backgroundColor: '#FFEDD5', padding: '8px', borderRadius: '50%' }}><CalendarClock size={18} color="#EA580C" /></div>;
       case 'bottleneck':
         return <div className={`${styles.iconWrapper} ${styles.iconWarning}`}><Bell size={18} color="#F59E0B" /></div>;
+      case 'removed':
+        return <div className={`${styles.iconWrapper}`} style={{ backgroundColor: '#FEE2E2', padding: '8px', borderRadius: '50%' }}><UserMinus size={18} color="#EF4444" /></div>;
       default:
         return <div className={`${styles.iconWrapper} ${styles.iconDefault}`}><Bell size={18} /></div>;
     }
@@ -211,6 +230,9 @@ export default function ActivityFeed() {
                     )}
                     {notif.type === 'bottleneck' && (
                       <span><strong>{notif.taskCode}</strong> in {notif.projectName} has been marked as a bottleneck.</span>
+                    )}
+                    {notif.type === 'removed' && (
+                      <span><strong>{notif.senderName}</strong> removed you from <strong>{notif.projectName}</strong></span>
                     )}
 
                   </div>

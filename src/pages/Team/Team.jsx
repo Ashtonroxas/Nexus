@@ -80,12 +80,16 @@ function Team() {
         ...userData,
       };
 
-      await setDoc(doc(db, "projects", projectId, "members", user.uid), {
+      // Create a pending invitation document instead of directly adding them
+      const inviteRef = doc(collection(db, "invitations"));
+      await setDoc(inviteRef, {
+        projectId: projectId,
+        projectName: projectName !== "Loading..." ? projectName : "Nexus Project",
+        invitedUserId: user.uid,
+        invitedBy: currentUser.uid,
         role: role,
-      });
-
-      await updateDoc(doc(db, "projects", projectId), {
-        memberIds: arrayUnion(user.uid),
+        status: 'pending',
+        createdAt: serverTimestamp()
       });
 
       //Trigger the activity logger for the invite
@@ -94,7 +98,8 @@ function Team() {
         senderName: currentUser.displayName || "A team member",
         projectName: projectName !== "Loading..." ? projectName : "Nexus Project",
         invitedUserId: user.uid, // Sends to the specific invited user
-        status: 'pending' // Gives them the Accept/Decline buttons
+        status: 'pending', // Gives them the Accept/Decline buttons
+        inviteId: inviteRef.id // Passing the invite ID so the activity feed can update it
       });
       console.log('Invite activity logged!');
 
@@ -121,10 +126,18 @@ function Team() {
   const handleRemoveMember = async (memberId) => {
     if (window.confirm("Are you sure you want to remove this member?")) {
       try {
-        // Delete the user from the projects/{projectId}/members collection
+        // 1. Log the activity BEFORE removing them so they still have access to receive it
+        await logActivity(projectId, 'removed', {
+          senderName: currentUser.displayName || "An Admin",
+          projectName: projectName !== "Loading..." ? projectName : "a project",
+          removedUserId: memberId,
+          visibleTo: [memberId] // Ensures only the removed user sees this specific notification
+        });
+
+        // 2. Delete the user from the projects/{projectId}/members collection
         await deleteDoc(doc(db, "projects", projectId, "members", memberId));
 
-        // Remove their ID from the project's memberIds array so it hides from their dashboard
+        // 3. Remove their ID from the project's memberIds array so it hides from their dashboard
         await updateDoc(doc(db, "projects", projectId), {
           memberIds: arrayRemove(memberId)
         });
