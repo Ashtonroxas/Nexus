@@ -327,3 +327,19 @@
     right: 12px;
   }
 }
+
+/* Snap-alignment guide lines shown while dragging a task */
+.snapGuide {
+  position: absolute;
+  pointer-events: none;
+}
+.snapGuideX {
+  top: -100000px;
+  height: 200000px;
+  border-left: 2px dashed #6366F1;
+}
+.snapGuideY {
+  left: -100000px;
+  width: 200000px;
+  border-top: 2px dashed #6366F1;
+}

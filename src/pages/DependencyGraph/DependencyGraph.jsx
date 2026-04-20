@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { 
-  ReactFlow, 
-  Controls, 
-  Background, 
-  useNodesState, 
-  useEdgesState, 
+  ReactFlow,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
   addEdge,
-  MiniMap,  
+  MiniMap,
   MarkerType,
   applyEdgeChanges,
   applyNodeChanges,
+  ViewportPortal,
 } from '@xyflow/react';
 import { HexColorPicker } from 'react-colorful';
 import '@xyflow/react/dist/style.css';
@@ -76,6 +77,9 @@ export default function DependencyGraph() {
   const mobilePickerRef = useRef(null);
 
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+
+  // Snap alignment guides shown while dragging a node
+  const [snapGuides, setSnapGuides] = useState({ x: null, y: null });
   
   // Handling task selection styling and sidebar status
   const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -406,9 +410,32 @@ export default function DependencyGraph() {
     // - dragging in this case
   const handleNodesChange = useCallback(
     async (changes) => {
-      setNodes((nds) => applyNodeChanges(changes, nds));
+      const SNAP_THRESHOLD = 10;
+      let guideX = null;
+      let guideY = null;
+      let anyDragging = false;
+      const snappedChanges = changes.map((change) => {
+        if (change.type !== "position" || !change.position) return change;
+        if (change.dragging) anyDragging = true;
+        let { x, y } = change.position;
+        for (const other of nodes) {
+          if (other.id === change.id) continue;
+          if (Math.abs(other.position.x - x) < SNAP_THRESHOLD) {
+            x = other.position.x;
+            guideX = other.position.x;
+          }
+          if (Math.abs(other.position.y - y) < SNAP_THRESHOLD) {
+            y = other.position.y;
+            guideY = other.position.y;
+          }
+        }
+        return { ...change, position: { x, y } };
+      });
 
-      const positionChanges = changes.filter(
+      setSnapGuides(anyDragging ? { x: guideX, y: guideY } : { x: null, y: null });
+      setNodes((nds) => applyNodeChanges(snappedChanges, nds));
+
+      const positionChanges = snappedChanges.filter(
         (change) => change.type === "position" &&
                     change.position &&
                     change.dragging === false
@@ -427,7 +454,7 @@ export default function DependencyGraph() {
           console.error("Error saving node position: ", error);
         }
       }
-    }, [projectId, setNodes, positionField]);
+    }, [projectId, setNodes, positionField, nodes]);
 
   // handle removing edges between nodes by updating firestore
   const handleEdgesChange = useCallback(
@@ -934,6 +961,14 @@ export default function DependencyGraph() {
           }}
         >
           <Background variant="dots" gap={20} size={1} />
+          <ViewportPortal>
+            {snapGuides.x !== null && (
+              <div className={`${styles.snapGuide} ${styles.snapGuideX}`} style={{ left: snapGuides.x }} />
+            )}
+            {snapGuides.y !== null && (
+              <div className={`${styles.snapGuide} ${styles.snapGuideY}`} style={{ top: snapGuides.y }} />
+            )}
+          </ViewportPortal>
           <Controls />
           {!isMobile && (
             <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.3)" />
