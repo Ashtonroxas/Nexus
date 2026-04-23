@@ -48,41 +48,63 @@ function Team() {
   const { menuButton } = useOutletContext();
 
   const [members, setMembers] = useState([]);
+  const [pendingMembers, setPendingMembers] = useState([]); 
   const [projectName, setProjectName] = useState("Loading...");
 
   // State for Add Member Modal
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [suggestions, setSuggestions] = useState([]);
-  const [inviteToast, setInviteToast] = useState("");
 
   // Handlers for Add Member Modal
   const handleCloseAddModal = () => setShowAddModal(false);
   const handleShowAddModal = () => setShowAddModal(true);
 
-  // Invite Team Member
+  // Invite Team Member Logic
   const handleConfirmAdd = async ({ email, role }) => {
     const cleanedEmail = email.trim().toLowerCase();
     if (!cleanedEmail) return;
 
     try {
+      // Find the user by email
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("email", "==", cleanedEmail));
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) {
+        alert("User not found.");
         return;
       }
 
       const userDoc = snapshot.docs[0];
       const userData = userDoc.data();
-      const user = {
-        uid: userDoc.id,
-        ...userData,
-      };
+      const user = { uid: userDoc.id, ...userData };
 
-      // Create a pending invitation document instead of directly adding them
-      const inviteRef = doc(collection(db, "invitations"));
+      // Check to see if they are they already an active member? 
+      const memberRef = doc(db, "projects", projectId, "members", user.uid);
+      const memberSnap = await getDoc(memberRef);
+      if (memberSnap.exists()) {
+        alert("This user is already an active member of this project.");
+        return;
+      }
+
+      // Check to see if they already have a pending invite? 
+      const invitesRef = collection(db, "invitations");
+      const duplicateInviteQuery = query(
+        invitesRef,
+        where("projectId", "==", projectId),
+        where("invitedUserId", "==", user.uid),
+        where("status", "==", "pending")
+      );
+      const duplicateInviteSnap = await getDocs(duplicateInviteQuery);
+      
+      if (!duplicateInviteSnap.empty) {
+        alert("This user already has a pending invitation.");
+        return;
+      }
+
+      // Create a pending invitation document
+      const inviteRef = doc(invitesRef);
       await setDoc(inviteRef, {
         projectId: projectId,
         projectName: projectName !== "Loading..." ? projectName : "Nexus Project",
@@ -93,62 +115,80 @@ function Team() {
         createdAt: serverTimestamp()
       });
 
-      //Trigger the activity logger for the invite
+      // Log activity (visible only to the person being invited)
       console.log('About to log invite activity...');
       await logActivity(projectId, 'invite', {
         senderName: currentUser.displayName || "A team member",
         projectName: projectName !== "Loading..." ? projectName : "Nexus Project",
-        invitedUserId: user.uid, // Sends to the specific invited user
-        status: 'pending', // Gives them the Accept/Decline buttons
-        inviteId: inviteRef.id // Passing the invite ID so the activity feed can update it
+        invitedUserId: user.uid,
+        status: 'pending',
+        inviteId: inviteRef.id
       });
       console.log('Invite activity logged!');
 
-      // Write docs of previously invited member history
-      await setDoc(doc(db, "users", currentUser.uid, "inviteHistory", user.uid),
-        {
-          uid: user.uid,
-          displayName: user.displayName || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Unknown User",
-          email: user.email || cleanedEmail,
-          imgURL: user.imgURL || "",
-          lastInteractedAt: serverTimestamp(),
-        },
-        { merge: true }
-    );
+      // 3. Update local interaction history for suggestions
+      await setDoc(doc(db, "users", currentUser.uid, "inviteHistory", user.uid), {
+        uid: user.uid,
+        displayName: user.displayName || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Unknown User",
+        email: user.email || cleanedEmail,
+        imgURL: user.imgURL || "",
+        lastInteractedAt: serverTimestamp(),
+      }, { merge: true });
 
       handleCloseAddModal();
-      setInviteToast("Invite Sent");
-      setTimeout(() => {
-        setInviteToast("");
-      }, 3000);
-
     } catch (error) {
       console.error("Error adding member: ", error);
       alert("Failed to add team member.");
     }
   };
 
+  //Cancel Pending Invite
+  const handleCancelInvite = async (inviteId) => {
+    if (window.confirm("Are you sure you want to cancel this invitation?")) {
+      try {
+        // Delete the invitation document itself
+        await deleteDoc(doc(db, "invitations", inviteId));
+
+        // Find the associated activity notification and completely remove it
+        const activitiesRef = collection(db, "projects", projectId, "activities");
+        const q = query(activitiesRef, where("inviteId", "==", inviteId));
+        const snapshot = await getDocs(q);
+
+        // Delete the matching activity document so it disappears from their feed
+        const deletePromises = snapshot.docs.map((docSnap) => deleteDoc(docSnap.ref));
+        await Promise.all(deletePromises);
+
+      } catch (error) {
+        console.error("Error canceling invite: ", error);
+        alert("Failed to cancel invitation.");
+      }
+    }
+  };
+
   // Remove Team Member
-  const handleRemoveMember = async (memberId) => {    
-    try {
-      // 1. Log the activity BEFORE removing them so they still have access to receive it
-      await logActivity(projectId, 'removed', {
-        senderName: currentUser.displayName || "An Admin",
-        projectName: projectName !== "Loading..." ? projectName : "a project",
-        removedUserId: memberId,
-        visibleTo: [memberId] // Ensures only the removed user sees this specific notification
-      });
+  const handleRemoveMember = async (memberId) => {
+    if (window.confirm("Are you sure you want to remove this member?")) {
+      try {
+        // Log the activity BEFORE removing them so they still have access to receive it
+        await logActivity(projectId, 'removed', {
+          senderName: currentUser.displayName || "An Admin",
+          projectName: projectName !== "Loading..." ? projectName : "a project",
+          removedUserId: memberId,
+          visibleTo: [memberId] // Ensures only the removed user sees this specific notification
+        });
 
-      // 2. Delete the user from the projects/{projectId}/members collection
-      await deleteDoc(doc(db, "projects", projectId, "members", memberId));
+        // Delete the user from the projects/{projectId}/members collection
+        await deleteDoc(doc(db, "projects", projectId, "members", memberId));
 
-      // 3. Remove their ID from the project's memberIds array so it hides from their dashboard
-      await updateDoc(doc(db, "projects", projectId), {
-        memberIds: arrayRemove(memberId)
-      });
+        // Remove their ID from the project's memberIds array so it hides from their dashboard
+        await updateDoc(doc(db, "projects", projectId), {
+          memberIds: arrayRemove(memberId)
+        });
 
-    } catch (error) {
-      console.error("Error removing member: ", error);
+      } catch (error) {
+        console.error("Error removing member: ", error);
+        alert("Failed to remove member.");
+      }
     }
   };
 
@@ -220,6 +260,41 @@ function Team() {
     return () => unsubscribe();
   }, [projectId, currentUser]);
 
+  // Fetch PENDING invites
+  useEffect(() => {
+    if (!projectId) return;
+
+    const invitesRef = collection(db, "invitations");
+    const q = query(
+      invitesRef, 
+      where("projectId", "==", projectId), 
+      where("status", "==", "pending")
+    );
+
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const inviteDetails = await Promise.all(
+        snapshot.docs.map(async (inviteDoc) => {
+          const data = inviteDoc.data();
+          // Fetch the invited user's profile info
+          const userSnap = await getDoc(doc(db, "users", data.invitedUserId));
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          
+          return {
+            userId: inviteDoc.id, // Using the invite doc ID to prevent key collisions
+            role: data.role,
+            isPending: true,
+            displayName: userData.displayName || "Invited User",
+            email: userData.email || "Pending Email",
+            jobTitle: "Awaiting Join",
+          };
+        })
+      );
+      setPendingMembers(inviteDetails);
+    });
+
+    return () => unsubscribe();
+  }, [projectId]);
+
   // Loading history of interacted with users for suggestions
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -238,6 +313,9 @@ function Team() {
 
     return () => unsubscribe();
   }, [currentUser]);
+
+  // Combine the arrays for rendering
+  const allDisplayMembers = [...members, ...pendingMembers];
 
   return (
     <div className={styles.contentContainer}>
@@ -282,7 +360,7 @@ function Team() {
           </div>
 
           <div className={styles.tableBody}>
-            {members.map((member) => {
+            {allDisplayMembers.map((member) => {
               const isYou = currentUser?.uid === member.userId;
               
               return (
@@ -290,7 +368,10 @@ function Team() {
                   <div className={`${styles.colMember} ${styles.memberInfo}`}>
                     <div 
                       className={styles.avatar} 
-                      style={{ backgroundColor: getAvatarColor(member.displayName) }}
+                      style={{ 
+                        backgroundColor: getAvatarColor(member.displayName),
+                        opacity: member.isPending ? 0.6 : 1
+                      }}
                     >
                       {getInitials(member.displayName)}
                     </div>
@@ -305,6 +386,12 @@ function Team() {
                       {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                     </span>
                     {isYou && <span className={`${styles.badge} ${styles.youBadge}`}>You</span>}
+                    {/* Pending Badge */}
+                    {member.isPending && (
+                      <span className={`${styles.badge}`} style={{ backgroundColor: '#FEF3C7', color: '#92400E', marginLeft: '8px' }}>
+                        Pending
+                      </span>
+                    )}
                   </div>
                   
                   <div className={`${styles.colEmail} ${styles.emailText}`}>
@@ -312,31 +399,38 @@ function Team() {
                   </div>
 
                   <div className={styles.colActions}>
-                    <TeamMenu
-                      memberId={member.userId}
-                      memberEmail={member.email}
-                      memberRole={member.role}
-                      currentUserRole={currentUserRole}
-                      isYou={isYou}
-                      onRemove={() => handleRemoveMember(member.userId)}
-                      onChangeRole={() => handleChangeRole(member.userId, member.role)}
-                    />
+                    {/* Render Team Menu for active members, or a Cancel button for pending invites */}
+                    {!member.isPending ? (
+                      <TeamMenu
+                        memberId={member.userId}
+                        memberEmail={member.email}
+                        memberRole={member.role}
+                        currentUserRole={currentUserRole}
+                        isYou={isYou}
+                        onRemove={() => handleRemoveMember(member.userId)}
+                        onChangeRole={() => handleChangeRole(member.userId, member.role)}
+                      />
+                    ) : (
+                      (currentUserRole === "owner" || currentUserRole === "admin") && (
+                        <button 
+                          onClick={() => handleCancelInvite(member.userId)}
+                          style={{ color: '#EF4444', background: 'none', border: 'none', fontSize: '0.875rem', cursor: 'pointer', fontWeight: '500' }}
+                        >
+                          Cancel
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               );
             })}
             
-            {members.length === 0 && (
+            {allDisplayMembers.length === 0 && (
               <div className={styles.emptyState}>No members found in this project.</div>
             )}
           </div>
         </div>
       </div>
-      {inviteToast && (
-        <div className={styles.inviteToast}>
-          {inviteToast}
-        </div>
-      )}
       <AddModal
         show={showAddModal}
         onHide={handleCloseAddModal}
