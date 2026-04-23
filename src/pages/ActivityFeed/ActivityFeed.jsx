@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Bell, UserPlus, CheckCircle, Clock, X, Check, PlusCircle, Trash2, CalendarClock, UserMinus } from 'lucide-react';
-import { collectionGroup, query, where, orderBy, onSnapshot, updateDoc, writeBatch, doc, setDoc, collection, arrayUnion, getDoc } from 'firebase/firestore';
+import { collectionGroup, query, where, orderBy, onSnapshot, updateDoc, writeBatch, doc, setDoc, collection, arrayUnion, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase';
 import { useAuth } from '../../firebase/AuthContext';
 import styles from './ActivityFeed.module.css';
@@ -75,17 +75,17 @@ export default function ActivityFeed() {
 
   const handleInviteResponse = async (notif, response) => {
     try {
-      // Extract projectId from the notification ref path (projects/projectId/activities/docId)
+      // Extract projectId from the notification ref path
       const projectId = notif.ref.path.split('/')[1];
       
-      //Update the activity document with the response
+      // Update the activity document so the feed shows "You joined" or "Invitation declined"
       await updateDoc(notif.ref, { 
         status: response, 
         read: true 
       });
 
-      // Fetch the actual invitation doc to get the correct role (Admin vs Member)
-      let assignedRole = "member"; // default fallback
+      // Find the actual invitation doc to get the assigned role
+      let assignedRole = "member"; 
       if (notif.inviteId) {
         const inviteRef = doc(db, "invitations", notif.inviteId);
         const inviteSnap = await getDoc(inviteRef);
@@ -93,24 +93,27 @@ export default function ActivityFeed() {
         if (inviteSnap.exists()) {
           assignedRole = inviteSnap.data().role || "member";
           
-          // Update the original invitation document so the database stays clean
-          await updateDoc(inviteRef, {
-            status: response,
-            updatedAt: new Date() 
-          });
+          if (response === 'declined') {
+            // COMPLETELY REMOVE the invite from the database if declined
+            await deleteDoc(inviteRef);
+          } else {
+            // Update to accepted if they joined
+            await updateDoc(inviteRef, {
+              status: response,
+              updatedAt: new Date() 
+            });
+          }
         }
       }
 
-      // If accepted, add user to the project's members with the CORRECT role
+      // If accepted, add user to the project's members with the correct role
       if (response === 'accepted') {
-        // Add to members subcollection
         await setDoc(doc(db, "projects", projectId, "members", currentUser.uid), {
           userId: currentUser.uid,
-          role: assignedRole, // Uses the actual assigned role now!
+          role: assignedRole, 
           joinedAt: new Date(),
         });
 
-        // Add to memberIds array
         await updateDoc(doc(db, "projects", projectId), {
           memberIds: arrayUnion(currentUser.uid)
         });
