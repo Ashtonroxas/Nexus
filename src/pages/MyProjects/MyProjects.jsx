@@ -6,7 +6,7 @@ import ProjectCard from "./components/ProjectCard/ProjectCard";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { ArrowUpDown } from "lucide-react";
 
-import { 
+import {
   collection,
   onSnapshot,
   addDoc,
@@ -14,6 +14,8 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  updateDoc,
+  arrayRemove,
   query,
   where,
   or,
@@ -118,6 +120,19 @@ function MyProjects() {
       await deleteDoc(doc(db, "projects", projectId));
     } catch (error) {
       console.error("Error deleting project: ", error);
+    }
+  };
+
+  // Current user leaves a project (non-owners only). Past activities remain
+  const handleLeaveProject = async (projectId) => {
+    if (!currentUser) return;
+    try {
+      await deleteDoc(doc(db, "projects", projectId, "members", currentUser.uid));
+      await updateDoc(doc(db, "projects", projectId), {
+        memberIds: arrayRemove(currentUser.uid),
+      });
+    } catch (error) {
+      console.error("Error leaving project: ", error);
     }
   };
 
@@ -230,12 +245,14 @@ function MyProjects() {
           const canDelete = project.owner === currentUserId; //verify user priveleges
 
           return (
-            <ProjectCard 
+            <ProjectCard
               key={project.id}
               project={project}
               onClick={() => navigate(`/projects/${project.id}`)}
               canDelete={canDelete}
               onDelete={handleDeleteProject}
+              canLeave={!canDelete}
+              onLeave={handleLeaveProject}
             />
           );
         })}
