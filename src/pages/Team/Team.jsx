@@ -54,6 +54,7 @@ function Team() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [suggestions, setSuggestions] = useState([]);
+  const [inviteToast, setInviteToast] = useState("");
 
   // Handlers for Add Member Modal
   const handleCloseAddModal = () => setShowAddModal(false);
@@ -116,6 +117,11 @@ function Team() {
     );
 
       handleCloseAddModal();
+      setInviteToast("Invite Sent");
+      setTimeout(() => {
+        setInviteToast("");
+      }, 3000);
+
     } catch (error) {
       console.error("Error adding member: ", error);
       alert("Failed to add team member.");
@@ -123,29 +129,26 @@ function Team() {
   };
 
   // Remove Team Member
-  const handleRemoveMember = async (memberId) => {
-    if (window.confirm("Are you sure you want to remove this member?")) {
-      try {
-        // 1. Log the activity BEFORE removing them so they still have access to receive it
-        await logActivity(projectId, 'removed', {
-          senderName: currentUser.displayName || "An Admin",
-          projectName: projectName !== "Loading..." ? projectName : "a project",
-          removedUserId: memberId,
-          visibleTo: [memberId] // Ensures only the removed user sees this specific notification
-        });
+  const handleRemoveMember = async (memberId) => {    
+    try {
+      // 1. Log the activity BEFORE removing them so they still have access to receive it
+      await logActivity(projectId, 'removed', {
+        senderName: currentUser.displayName || "An Admin",
+        projectName: projectName !== "Loading..." ? projectName : "a project",
+        removedUserId: memberId,
+        visibleTo: [memberId] // Ensures only the removed user sees this specific notification
+      });
 
-        // 2. Delete the user from the projects/{projectId}/members collection
-        await deleteDoc(doc(db, "projects", projectId, "members", memberId));
+      // 2. Delete the user from the projects/{projectId}/members collection
+      await deleteDoc(doc(db, "projects", projectId, "members", memberId));
 
-        // 3. Remove their ID from the project's memberIds array so it hides from their dashboard
-        await updateDoc(doc(db, "projects", projectId), {
-          memberIds: arrayRemove(memberId)
-        });
+      // 3. Remove their ID from the project's memberIds array so it hides from their dashboard
+      await updateDoc(doc(db, "projects", projectId), {
+        memberIds: arrayRemove(memberId)
+      });
 
-      } catch (error) {
-        console.error("Error removing member: ", error);
-        alert("Failed to remove member.");
-      }
+    } catch (error) {
+      console.error("Error removing member: ", error);
     }
   };
 
@@ -329,6 +332,11 @@ function Team() {
           </div>
         </div>
       </div>
+      {inviteToast && (
+        <div className={styles.inviteToast}>
+          {inviteToast}
+        </div>
+      )}
       <AddModal
         show={showAddModal}
         onHide={handleCloseAddModal}
