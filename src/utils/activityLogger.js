@@ -5,7 +5,7 @@ export const logActivity = async (projectId, type, details) => {
   try {
     let visibleTo = [];
 
-    //If it's an invite, only show it to the person being invited
+    // If it's an invite, only show it to the person being invited
     if (type === 'invite' && details.invitedUserId) {
       visibleTo = [details.invitedUserId];
       console.log('Logging INVITE activity:', {
@@ -15,8 +15,18 @@ export const logActivity = async (projectId, type, details) => {
         senderName: details.senderName,
         projectName: details.projectName
       });
-    } else {
-      //tasks/deadlines, fetch all current members in the project
+    } 
+    // Handle member removals by using the specific recipient list passed from Team.jsx
+    else if (type === 'removed' && details.visibleTo) {
+      visibleTo = details.visibleTo;
+      console.log('Logging REMOVED activity:', {
+        projectId,
+        removedUserId: details.removedUserId,
+        visibleTo
+      });
+    }
+    else {
+      // For tasks and deadlines, fetch all current members in the project
       const membersRef = collection(db, `projects/${projectId}/members`);
       const membersSnap = await getDocs(membersRef);
       visibleTo = membersSnap.docs.map(doc => doc.id);
@@ -38,6 +48,7 @@ export const logActivity = async (projectId, type, details) => {
       projectName: details.projectName || 'Project',
       taskCode: details.taskCode || '',
       status: details.status || null,
+      inviteId: details.inviteId || null,
       read: false,
       timestamp: serverTimestamp()
     });
