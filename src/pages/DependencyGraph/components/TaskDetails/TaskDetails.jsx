@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react";
-import { X, Calendar, ArrowLeft, ArrowRight } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { X, Calendar, ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { useAuth } from "../../../../firebase/AuthContext";
+import { logActivity } from "../../../../utils/activityLogger";
 import styles from "./TaskDetails.module.css";
 
 function TaskDetails({
@@ -9,14 +12,26 @@ function TaskDetails({
   blockedBy = [],
   blocking = [],
   isMobile = false,
+  teamMembers = [],
+  projectName = "Project",
 }) {
+  // Hooks for activity logging
+  const { projectId } = useParams();
+  const { currentUser } = useAuth();
+
   // UI state handlers for task details
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("To Do");
   const [complexity, setComplexity] = useState("Low");
   const [assigneeName, setAssigneeName] = useState("");
+  const [assigneeId, setAssigneeId] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  const statusDropdownRef = useRef(null);
+  const complexityDropdownRef = useRef(null);
+  const assigneeDropdownRef = useRef(null);
 
   // Lifecycle listener for changes in task information to update
   // sidebar/bottom sheet automatically
@@ -28,8 +43,28 @@ function TaskDetails({
     setStatus(task.status || "To Do");
     setComplexity(task.complexity || "Low");
     setAssigneeName(task.assigneeName || "");
+    setAssigneeId(task.assigneeId || "");
     setDueDate(task.dueDate || "");
+    setOpenDropdown(null);
   }, [task]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      const clickedStatus = statusDropdownRef.current && statusDropdownRef.current.contains(e.target);
+      const clickedComplexity = complexityDropdownRef.current && complexityDropdownRef.current.contains(e.target);
+      const clickedAssignee = assigneeDropdownRef.current && assigneeDropdownRef.current.contains(e.target);
+
+      if (!clickedStatus && !clickedComplexity && !clickedAssignee) {
+        setOpenDropdown(null);
+      }
+    };
+    
+    if (openDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [openDropdown]);
 
   if (!task) return null;
 
@@ -38,7 +73,7 @@ function TaskDetails({
     onSave?.(task.id, updates);
   };
 
-  // -- Group of helper function to save fields at save events -- //
+  //helper function to save fields at save events  //
   
   // Save when user clicks out of title
   const handleTitleBlur = () => {
@@ -50,30 +85,11 @@ function TaskDetails({
     saveField({ description });
   };
 
-  // Save when user clicks out of assignee
-  const handleAssigneeBlur = () => {
-    saveField({ assigneeName });
-  };
-
   // update date
   const handleDateChange = (e) => {
     const value = e.target.value;
     setDueDate(value);
     saveField({ dueDate: value });
-  };
-
-  // update status
-  const handleStatusChange = (e) => {
-    const value = e.target.value;
-    setStatus(value);
-    saveField({ status: value });
-  };
-
-  // update complexity
-  const handleComplexityChange = (e) => {
-    const value = e.target.value;
-    setComplexity(value);
-    saveField({ complexity: value });
   };
 
   // update assignee initialis based on name change
@@ -134,70 +150,192 @@ function TaskDetails({
           {/* Editable status */}
           <div className={styles.infoLabel}>Status</div>
 
-          <div className={styles.selectWrap}>
-            {/* Check status and return appropriate styling */}
-            <span
-              className={`${styles.statusDot} ${
-                status === "Done"
-                  ? styles.statusDone
-                  : status === "In Progress"
-                  ? styles.statusInProgress
-                  : styles.statusTodo
+          <div ref={statusDropdownRef} className={styles.dropdownContainer}>
+            <div
+              className={`${styles.dropdownTrigger} ${
+                openDropdown === "status" ? styles.dropdownTriggerOpen : ""
               }`}
-            />
-            {/* Dropdown menu for status change */}
-            <select
-              className={styles.statusSelect}
-              value={status}
-              onChange={handleStatusChange}
+              onClick={() =>
+                setOpenDropdown((prev) => (prev === "status" ? null : "status"))
+              }
             >
-              <option>To Do</option>
-              <option>In Progress</option>
-              <option>Done</option>
-            </select>
+              <div className={styles.dropdownValue}>
+                <span
+                  className={`${styles.statusDot} ${
+                    status === "Done"
+                      ? styles.statusDone
+                      : status === "In Progress"
+                      ? styles.statusInProgress
+                      : styles.statusTodo
+                  }`}
+                />
+                <span className={styles.dropdownText}>{status}</span>
+              </div>
+              <ChevronDown size={16} className={styles.chevron} />
+            </div>
+
+            {openDropdown === "status" && (
+              <div className={styles.dropdownMenu}>
+                {["To Do", "In Progress", "Done"].map((option) => (
+                  <div
+                    key={option}
+                    className={styles.dropdownItem}
+                    onClick={async () => {
+                      setStatus(option);
+                      saveField({ status: option });
+                      setOpenDropdown(null);
+
+                      if (option === "Done" && task && projectId) {
+                        try {
+                          await logActivity(projectId, "task_completed", {
+                            senderName: currentUser?.displayName || "A team member",
+                            projectName: projectName,
+                            taskCode: task.taskCode,
+                          });
+                        } catch (error) {
+                          console.error("Error logging task completion activity:", error);
+                        }
+                      }
+                    }}
+                  >
+                    <span
+                      className={`${styles.statusDot} ${
+                        option === "Done"
+                          ? styles.statusDone
+                          : option === "In Progress"
+                          ? styles.statusInProgress
+                          : styles.statusTodo
+                      }`}
+                    />
+                    <span>{option}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         <div className={styles.infoField}>
           <div className={styles.infoLabel}>Complexity</div>
           {/* Determine complexity and return appropriate styling */}
-          <select
-            className={`${styles.pillSelect} ${
-              complexity === "Severe"
-                ? styles.severePill
-                : complexity === "High"
-                ? styles.highPill
-                : complexity === "Medium"
-                ? styles.mediumPill
-                : styles.lowPill
-            }`}
-            value={complexity}
-            onChange={handleComplexityChange}
-          >
-            {/* Dropdown menu for complexity */}
-            <option>Low</option>
-            <option>Medium</option>
-            <option>High</option>
-            <option>Severe</option>
-          </select>
+          <div ref={complexityDropdownRef} className={styles.dropdownContainer}>
+            <div
+              className={`${styles.dropdownTrigger} ${
+                openDropdown === "complexity" ? styles.dropdownTriggerOpen : ""
+              }`}
+              onClick={() =>
+                setOpenDropdown((prev) => (prev === "complexity" ? null : "complexity"))
+              }
+            >
+              <div className={styles.dropdownValue}>
+                <span
+                  className={`${styles.pillTag} ${
+                    complexity === "Severe"
+                      ? styles.severePill
+                      : complexity === "High"
+                      ? styles.highPill
+                      : complexity === "Medium"
+                      ? styles.mediumPill
+                      : styles.lowPill
+                  }`}
+                >
+                  {complexity}
+                </span>
+              </div>
+              <ChevronDown size={16} className={styles.chevron} />
+            </div>
+
+            {openDropdown === "complexity" && (
+              <div className={styles.dropdownMenu}>
+                {["Low", "Medium", "High", "Severe"].map((option) => (
+                  <div
+                    key={option}
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      setComplexity(option);
+                      saveField({ complexity: option });
+                      setOpenDropdown(null);
+                    }}
+                  >
+                    <span
+                      className={`${styles.pillTag} ${
+                        option === "Severe"
+                          ? styles.severePill
+                          : option === "High"
+                          ? styles.highPill
+                          : option === "Medium"
+                          ? styles.mediumPill
+                          : styles.lowPill
+                      }`}
+                    >
+                      {option}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className={styles.infoField}>
-          {/* Editable assignee field & initial bubble */}
           <div className={styles.infoLabel}>Assignee</div>
 
-          <div className={styles.assigneeRow}>
-            <div className={styles.assigneeBadge}>
-              {liveAssigneeInitials}
+          <div ref={assigneeDropdownRef} className={styles.dropdownContainer}>
+            <div
+              className={`${styles.dropdownTrigger} ${
+                openDropdown === "assignee" ? styles.dropdownTriggerOpen : ""
+              }`}
+              onClick={() =>
+                setOpenDropdown((prev) => (prev === "assignee" ? null : "assignee"))
+              }
+            >
+              <div className={styles.dropdownValue}>
+                <div className={styles.assigneeBadge}>
+                  {liveAssigneeInitials}
+                </div>
+                <span className={styles.dropdownText}>
+                  {assigneeName || "Unassigned"}
+                </span>
+              </div>
+              <ChevronDown size={16} className={styles.chevron} />
             </div>
 
-            <input
-              className={styles.inlineInput}
-              value={assigneeName}
-              onChange={(e) => setAssigneeName(e.target.value)}
-              onBlur={handleAssigneeBlur}
-              placeholder="Unassigned"
-            />
+            {openDropdown === "assignee" && (
+              <div className={styles.dropdownMenu}>
+                <div
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    setAssigneeName("");
+                    setAssigneeId("");
+                    saveField({ 
+                      assigneeName: "",
+                      assigneeId: "",
+                    });
+                    setOpenDropdown(null);
+                  }}
+                >
+                  <span>Unassigned</span>
+                </div>
+
+                {teamMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      setAssigneeName(member.name);
+                      setAssigneeId(member.id);
+                      saveField({ 
+                        assigneeName: member.name,
+                        assigneeId: member.id,
+                      });
+                      setOpenDropdown(null);
+                    }}
+                  >
+                    <span>{member.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

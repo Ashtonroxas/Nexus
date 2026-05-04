@@ -101,13 +101,16 @@
   border: none;
   background: transparent;
   box-shadow: none;
-  padding: 0;
+  padding: 0 0.5rem;
   margin: 0;
   min-width: 0;
 
   font-size: 1.5rem;
   font-weight: 700;
   color: #111111;
+
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
 }
 .desktopBreadcrumbTitle:focus {
   outline: none;
@@ -119,18 +122,20 @@
   border: none;
   background: transparent;
   box-shadow: none;
-  padding: 0;
+  padding: 1;
   margin: 0;
   min-width: 0;
   flex: 1;
   font-size: 0.95rem;
   font-weight: 600;
   color: #111111;
+
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
 }
 .mobileProjectNameInput:focus {
   outline: none;
   box-shadow: none;
-  background: transparent;
 }
 
 .projectDescriptionInput {
@@ -139,11 +144,14 @@
   box-shadow: none;
   font-size: 1rem;
   color: var(--stroke-solid);
-  padding: 0;
+  padding: 0.5rem;
   margin: 0;
   width: min(560px, 100%);
   min-height: 48px;
   resize: none;
+
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
 }
 .projectDescriptionInput:focus {
   outline: none;
@@ -155,7 +163,7 @@
   border: none;
   background: transparent;
   box-shadow: none;
-  padding: 0;
+  padding: 1;
   margin-top: 0.2rem;
   width: 100%;
   min-height: 36px;
@@ -163,18 +171,15 @@
   font-size: 0.72rem;
   line-height: 1.35;
   color: var(--stroke-solid);
+
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
 }
 .mobileProjectDescriptionInput:focus {
   outline: none;
   box-shadow: none;
-  background: transparent;
 }
 
-.projectDescriptionInput:hover,
-.desktopBreadcrumbTitle:hover {
-  background: rgba(0,0,0,0.03);
-  border-radius: 6px;
-}
 .projectDescriptionInput:focus,
 .desktopBreadcrumbTitle:focus {
   background: rgba(0,0,0,0.05);
@@ -290,14 +295,14 @@
 }
 
 /* Bottom sheet appears on tablets as well */
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .bottomSheetOverlay {
     display: none;
   }
 }
 
 /* Mobile responsiveness and headers */
-@media (max-width: 767px) {
+@media (max-width: 991.98px) {
   .sidebarOverlay {
     display: none;
   }
@@ -321,4 +326,20 @@
     top: 12px;
     right: 12px;
   }
+}
+
+/* Snap-alignment guide lines shown while dragging a task */
+.snapGuide {
+  position: absolute;
+  pointer-events: none;
+}
+.snapGuideX {
+  top: -100000px;
+  height: 200000px;
+  border-left: 2px dashed #6366F1;
+}
+.snapGuideY {
+  left: -100000px;
+  width: 200000px;
+  border-top: 2px dashed #6366F1;
 }

@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { 
-  ReactFlow, 
-  Controls, 
-  Background, 
-  useNodesState, 
-  useEdgesState, 
+  ReactFlow,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
   addEdge,
-  MiniMap,  
+  MiniMap,
   MarkerType,
   applyEdgeChanges,
   applyNodeChanges,
+  ViewportPortal,
 } from '@xyflow/react';
 import { HexColorPicker } from 'react-colorful';
 import '@xyflow/react/dist/style.css';
@@ -26,11 +27,16 @@ import {
   deleteDoc,
   setDoc,
   getDocs,
+  getDoc
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
+import { useAuth } from "../../firebase/AuthContext";
 import TaskNode from './components/TaskNode/TaskNode';
+import CustomEdge from './components/CustomEdge/CustomEdge'; 
 import CreateTaskModal from './components/CreateTaskModal/CreateTaskModal';
 import TaskDetails from './components/TaskDetails/TaskDetails';
+import { logActivity } from "../../utils/activityLogger";
+import { createsCycle } from '../../utils/graphUtils';
 import styles from './DependencyGraph.module.css';
 
 const nodeTypes = { 
@@ -42,8 +48,15 @@ export default function DependencyGraph() {
   const [nodes, setNodes ] = useNodesState([]);
   const [edges, setEdges ] = useEdgesState([]);
 
+  // Track which edge the mouse is currently hovering over
+  const [hoveredEdgeId, setHoveredEdgeId] = useState(null);
+
+  // Register our custom edge type
+  const edgeTypes = useMemo(() => ({ custom: CustomEdge }), []);
+
   const { menuButton } = useOutletContext(); // from parent layout
-  const { projectId } = useParams(); 
+  const { projectId } = useParams();
+  const { currentUser } = useAuth(); // Current authenticated user
 
   // State management for temp/permanent project data
   const [project, setProject] = useState(null);
@@ -51,22 +64,58 @@ export default function DependencyGraph() {
   const [projectDescription, setProjectDescription] = useState("");
   const [projectColor, setProjectColor] = useState("#6366F1");
 
+  // State management for team members fetched from Firestore
+  const [teamMembers, setTeamMembers] = useState([]);
+
   // System status loading information
   const [saveStatus, setSaveStatus] = useState("idle");
   const [hasLoadedProject, setHasLoadedProject] = useState(false);
 
   // Project color display
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const pickerRef = useRef(null);
+  const desktopPickerRef = useRef(null);
+  const mobilePickerRef = useRef(null);
 
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+
+  // Snap alignment guides shown while dragging a node
+  const [snapGuides, setSnapGuides] = useState({ x: null, y: null });
   
   // Handling task selection styling and sidebar status
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
 
   // 768 screen limit for screensize differentiation
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const positionField = isMobile ? "positionMobile" : "positionDesktop";
+
+  // Fetch Team Members specifically invited to this project
+  useEffect(() => {
+    if (!projectId) return;
+
+    const membersRef = collection(db, "projects", projectId, "members");
+    const unsubscribe = onSnapshot(membersRef, async (snapshot) => {
+      const memberDocs = snapshot.docs.map(doc => doc.id); // Get UIDs
+
+      // Fetch full user details from the 'users' collection
+      const memberDetails = await Promise.all(
+        memberDocs.map(async (userId) => {
+          const userSnap = await getDoc(doc(db, "users", userId));
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          return {
+            id: userId,
+            name: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || "Unknown User",
+          };
+        })
+      );
+
+      // Sort alphabetically by name
+      memberDetails.sort((a, b) => a.name.localeCompare(b.name));
+      setTeamMembers(memberDetails);
+    });
+
+    return () => unsubscribe();
+  }, [projectId]);
 
   // Helper function to generate random task code
   // Added checks to ensure repeating bug after deleting nodes was removed
@@ -98,9 +147,7 @@ export default function DependencyGraph() {
     }
   };
 
-  /**
-   * Project and Firestore handlers
-  */
+  /*Project and Firestore handlers*/
 
   // Saves entered project information into firestore - handles exceptions
   // Keeps user informed regarding save status using "saved/saving" label
@@ -110,7 +157,7 @@ export default function DependencyGraph() {
     const trimmedDescription = projectDescription.trim();
     if (trimmedName === (project.name || "Untitled Project") &&
         trimmedDescription === (project.description || "") &&
-        projectColor === (project.color || "#6366F1")) {
+        projectColor === (project.color || "#6366F1")) { 
           setSaveStatus("saved");
           return;
         }
@@ -155,6 +202,7 @@ export default function DependencyGraph() {
         title: taskFormData.title,
         description: taskFormData.description,
         assigneeName,
+        assigneeId: taskFormData.assigneeId || "",
         assigneeInitials,
         status: taskFormData.status,
         complexity: taskFormData.complexity,
@@ -162,11 +210,22 @@ export default function DependencyGraph() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
 
-        position: {
-          x: 120 + nodes.length * 40,
-          y: 140 + nodes.length * 20,
+        positionDesktop: {
+          x: 120 + nodes.length * 260,
+          y: 140 + nodes.length * 120,
         },
+        positionMobile: {
+          x: 40 + nodes.length * 140,
+          y: 100 + nodes.length * 100,
+        }
       }); 
+
+      // Log activity for task creation
+      await logActivity(projectId, 'task_created', {
+        senderName: currentUser?.displayName || "A team member",
+        projectName: projectName || "Project",
+        taskCode: nextTaskCode,
+      });
     } catch (error) {
       console.error("Error creating task: ", error);
     }
@@ -176,23 +235,31 @@ export default function DependencyGraph() {
   const handleUpdateTask = async (taskId, updates) => {
     if (!projectId || !taskId) return;
 
-    const assigneeName = (updates.assigneeName ?? "").trim() || "Unassigned";
-    const assigneeInitials = assigneeName !== "Unassigned"
-      ? assigneeName
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((i) => i[0].toUpperCase())
-        .join("")
-      : "--";
+    // Create a base object with the timestamp
+    const firestoreUpdates = {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    };
+
+    // ONLY recalculate and overwrite assignee logic if an assignee update was explicitly passed in
+    if (updates.assigneeName !== undefined) {
+      const assigneeName = updates.assigneeName.trim() || "Unassigned";
+      const assigneeInitials = assigneeName !== "Unassigned"
+        ? assigneeName
+          .split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((i) => i[0].toUpperCase())
+          .join("")
+        : "--";
+
+      firestoreUpdates.assigneeName = assigneeName;
+      firestoreUpdates.assigneeInitials = assigneeInitials;
+      firestoreUpdates.assigneeId = updates.assigneeId || "";
+    }
 
     try {
-      await updateDoc(doc(db, "projects", projectId, "tasks", taskId), {
-        ...updates,
-        assigneeName,
-        assigneeInitials,
-        updatedAt: serverTimestamp(),
-      });
+      await updateDoc(doc(db, "projects", projectId, "tasks", taskId), firestoreUpdates);
     } catch (error) {
       console.error("Error updating task: ", error);
     }
@@ -204,6 +271,11 @@ export default function DependencyGraph() {
       if (!projectId || !taskId) return;
 
       try {
+        // Fetch task data before deleting to get task code for activity logging
+        const taskDoc = await getDoc(doc(db, "projects", projectId, "tasks", taskId));
+        const taskData = taskDoc.data();
+        const taskCode = taskData?.taskCode || 'Unknown Task';
+
         const edgesRef = collection(db, "projects", projectId, "edges");
         const edgeSnapshot = await getDocs(edgesRef);
 
@@ -221,6 +293,13 @@ export default function DependencyGraph() {
       // delete all associated tasks
       await deleteDoc(doc(db, "projects", projectId, "tasks", taskId));
 
+      // Log activity for task deletion
+      await logActivity(projectId, 'task_deleted', {
+        senderName: currentUser?.displayName || "A team member",
+        projectName: projectName || "Project",
+        taskCode: taskCode,
+      });
+
       // Update UI status for immediate system status
       setEdges((eds) => 
         eds.filter((edge) => edge.source !== taskId && edge.target !== taskId));
@@ -228,13 +307,66 @@ export default function DependencyGraph() {
       } catch (error) {
         console.error("Error deleting task and edges: ", error);
       }
-    }, [projectId, setNodes, setEdges]);
+    }, [projectId, setNodes, setEdges, currentUser, projectName]);
+
+  // Check for approaching deadlines and log activities
+  const checkApproachingDeadlines = useCallback(async (taskDocs) => {
+    if (!projectId || !projectName) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const threeDaysFromNow = new Date(today);
+    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+    for (const taskDoc of taskDocs) {
+      const taskData = taskDoc.data();
+      
+      // Skip if no due date or task is already done
+      if (!taskData.dueDate || taskData.status === "Done") continue;
+
+      // Parse the due date
+      const dueDate = new Date(taskData.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+
+      // Check if deadline is approaching (within 3 days and not in the past)
+      if (dueDate >= today && dueDate <= threeDaysFromNow) {
+        try {
+          // Check if we've already logged a deadline activity for this task
+          const activitiesRef = collection(db, "projects", projectId, "activities");
+          const existingActivities = await getDocs(activitiesRef);
+          
+          const alreadyLogged = existingActivities.docs.some(doc => {
+            const data = doc.data();
+            return data.type === 'deadline' && data.taskCode === taskData.taskCode;
+          });
+
+          // Only log if we haven't already logged this deadline
+          if (!alreadyLogged) {
+            await logActivity(projectId, 'deadline', {
+              senderName: "System",
+              projectName: projectName,
+              taskCode: taskData.taskCode,
+            });
+          }
+        } catch (error) {
+          console.error("Error checking deadline:", error);
+        }
+      }
+    }
+  }, [projectId, projectName]);
 
   // Handles association of dependencies and task collections in firestore for use
   // when user connects two nodes on the graph UI
-    const onConnect = useCallback(
+  const onConnect = useCallback(
     async (params) => {
       if (!projectId || !params.source || !params.target) return;
+
+      // Validity checks (edge already exists/cycle paths)
+      const edgeExists = edges.some(
+        (edge) => edge.source === params.source && edge.target === params.target //check if matching edge already there
+      );
+      if (edgeExists) return;
+      if (createsCycle(nodes, edges, params.source, params.target)) return; // checks for cyclic path
 
       const edgeId = `edge-${params.source}-${params.target}`;
       const newEdge = {
@@ -243,15 +375,16 @@ export default function DependencyGraph() {
         target: params.target,
         sourceHandle: params.sourceHandle,
         targetHandle: params.targetHandle,
+        type: 'custom', // Use custom edge by default
         animated: false,
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          width: 20,
-          height: 20,
+          width: 14, // Made arrow smaller (from 20)
+          height: 14, // Made arrow smaller (from 20)
         },
         style: {
           stroke: "#6B7280",
-          strokeWidth: 2,
+          strokeWidth: 4, 
         },
       };
 
@@ -271,15 +404,38 @@ export default function DependencyGraph() {
       } catch (error) {
         console.error("Error saving edge: ", error);
       }
-    }, [projectId, setEdges]);
+    }, [projectId, setEdges, edges, nodes]);
 
     // Function updates stored node coordinates upon any UI position changes
     // - dragging in this case
   const handleNodesChange = useCallback(
     async (changes) => {
-      setNodes((nds) => applyNodeChanges(changes, nds));
+      const SNAP_THRESHOLD = 10;
+      let guideX = null;
+      let guideY = null;
+      let anyDragging = false;
+      const snappedChanges = changes.map((change) => {
+        if (change.type !== "position" || !change.position) return change;
+        if (change.dragging) anyDragging = true;
+        let { x, y } = change.position;
+        for (const other of nodes) {
+          if (other.id === change.id) continue;
+          if (Math.abs(other.position.x - x) < SNAP_THRESHOLD) {
+            x = other.position.x;
+            guideX = other.position.x;
+          }
+          if (Math.abs(other.position.y - y) < SNAP_THRESHOLD) {
+            y = other.position.y;
+            guideY = other.position.y;
+          }
+        }
+        return { ...change, position: { x, y } };
+      });
 
-      const positionChanges = changes.filter(
+      setSnapGuides(anyDragging ? { x: guideX, y: guideY } : { x: null, y: null });
+      setNodes((nds) => applyNodeChanges(snappedChanges, nds));
+
+      const positionChanges = snappedChanges.filter(
         (change) => change.type === "position" &&
                     change.position &&
                     change.dragging === false
@@ -288,7 +444,7 @@ export default function DependencyGraph() {
       for (const change of positionChanges) {
         try {
           await updateDoc(doc(db, "projects", projectId, "tasks", change.id), {
-            position: {
+            [positionField]: {
               x: change.position.x,
               y: change.position.y,
             },
@@ -298,7 +454,7 @@ export default function DependencyGraph() {
           console.error("Error saving node position: ", error);
         }
       }
-    }, [projectId, setNodes]);
+    }, [projectId, setNodes, positionField, nodes]);
 
   // handle removing edges between nodes by updating firestore
   const handleEdgesChange = useCallback(
@@ -318,31 +474,61 @@ export default function DependencyGraph() {
       }
     }, [projectId, setEdges]);
 
-  // apply animations and styling 
+  // Delete an edge function passed to the custom hover button
+  const handleDeleteEdge = useCallback(async (edgeId) => {
+    if (!projectId || !edgeId) return;
+    try {
+      await deleteDoc(doc(db, "projects", projectId, "edges", edgeId));
+    } catch (error) {
+      console.error("Error deleting edge via hover button: ", error);
+    }
+  }, [projectId]);
+
+  // Double click deletion (Kept as a convenient fallback)
+  const onEdgeDoubleClick = useCallback(async (event, edge) => {
+    if (!projectId || !edge.id) return;
+    handleDeleteEdge(edge.id);
+  }, [projectId, handleDeleteEdge]);
+
+  // apply animations, styling, and custom data properties
   const edgesWithDynamicStyles = useMemo(() => {
     return edges.map((edge) => {
       const sourceNode = nodes.find((n) => n.id === edge.source);
       
       // check if the source node (where the arrow starts) is severe
       const isSevere = sourceNode?.data?.complexity?.toLowerCase() === "severe";
-        
       const isSourceDone = sourceNode?.data?.status?.toLowerCase() === "done";
 
       // Determine the color and thickness
       let edgeColor = "#6B7280"; 
-      let edgeWidth = 2;
+      let edgeWidth = 4; 
 
-      // Check if it's done FIRST
       if (isSourceDone) {
-        edgeColor = "#22C55E"; // Green for completed dependency 
-        edgeWidth = 2; // Resetting width to standard for completed tasks
+        edgeColor = "#22C55E"; 
+        edgeWidth = 4; 
       } else if (isSevere) {
-        edgeColor = "#EF4444"; // Red for severe bottleneck
-        edgeWidth = 1;
+        edgeColor = "#EF4444"; 
+        edgeWidth = 4; // Changed from 2 to 4 so it matches all other arrows
       }
+
+      if (edge.selected) {
+        edgeColor = "#6366F1"; 
+        edgeWidth = 6;         
+      }
+
       return {
         ...edge,
-        animated: true, // Keep the motion animation on
+        type: 'custom', // Bind to our custom edge component
+        animated: true, 
+        data: {
+          ...edge.data,
+          onDelete: handleDeleteEdge,
+          isHovered: hoveredEdgeId === edge.id,
+          isSelected: edge.selected,
+          // Methods to trigger hover state from within the HTML button label itself
+          onHoverEnter: () => setHoveredEdgeId(edge.id),
+          onHoverLeave: () => setHoveredEdgeId(null),
+        },
         style: {
           ...edge.style,
           stroke: edgeColor,
@@ -354,9 +540,9 @@ export default function DependencyGraph() {
         },
       };
     });
-  }, [edges, nodes]);
+  }, [edges, nodes, hoveredEdgeId, handleDeleteEdge]);
 
-  // -- Porject Summary Helper Functions -- //
+  // -- Project Summary Helper Functions -- //
 
   // Update firestore with tasks marked as done for progress usage
   const updateProjectTaskInfo = useCallback(
@@ -446,7 +632,10 @@ export default function DependencyGraph() {
   // Allowing user to escape color wheel by clicking anywhere else on the page
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+      const clickedDesktopPicker = desktopPickerRef.current && desktopPickerRef.current.contains(e.target);
+      const clickedMobilePicker = mobilePickerRef.current && mobilePickerRef.current.contains(e.target);
+
+      if (!clickedDesktopPicker && !clickedMobilePicker) {
         setShowColorPicker(false);
       }
     };
@@ -460,6 +649,8 @@ export default function DependencyGraph() {
 
   // Project information firestore listener
   useEffect(() => {
+    if (!projectId) return;
+
     const unsubscribe = onSnapshot(doc(db, "projects", projectId), (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
@@ -472,10 +663,13 @@ export default function DependencyGraph() {
         };
 
         setProject(projectData);
-        setProjectName((prev) => (hasLoadedProject ? prev : projectData.name));
-        setProjectDescription((prev) => (hasLoadedProject? prev : projectData.description));
-        setProjectColor(projectData.color);
-        setHasLoadedProject(true);
+
+        if (!hasLoadedProject) {
+          setProjectName((prev) => (hasLoadedProject ? prev : projectData.name));
+          setProjectDescription((prev) => (hasLoadedProject? prev : projectData.description));
+          setProjectColor(projectData.color);
+          setHasLoadedProject(true);
+        }
       }
     });
 
@@ -497,7 +691,7 @@ export default function DependencyGraph() {
   // Responsive resizing with a window listener (used for node rendering)
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 992);
     };
     window.addEventListener("resize", handleResize);
 
@@ -517,13 +711,17 @@ export default function DependencyGraph() {
       const firestoreNodes = snapshot.docs.map((taskDoc, index) => {
         const data = taskDoc.data();
 
+        const savedPosition = isMobile
+          ? data.positionMobile
+          : data.positionDesktop;
+
         return {
           id: taskDoc.id,
           type: "taskNode",
           selected: taskDoc.id === selectedTaskId,
           position: {
-            x: data.position?.x ?? 120 + index * 260,
-            y: data.position?.y ?? 140,
+            x: savedPosition?.x ?? (isMobile ? 40 + index * 140 : 120 + index * 260),
+            y: savedPosition?.y ?? (isMobile ? 100 + index * 100 : 140 + index * 120),
           },
 
           data: {
@@ -531,6 +729,7 @@ export default function DependencyGraph() {
             title: data.title || "Untitled Task",
             description: data.description || "",
             assigneeName: data.assigneeName || "Unassigned",
+            assigneeId: data.assigneeId || "",
             assigneeInitials: data.assigneeInitials || "--",
             status: data.status || "To Do",
             complexity: data.complexity || "Low",
@@ -544,6 +743,9 @@ export default function DependencyGraph() {
       setNodes(firestoreNodes);
       updateProjectTaskInfo(snapshot.docs);
       updateProjectDeadline(snapshot.docs);
+      
+      // Check for approaching deadlines
+      checkApproachingDeadlines(snapshot.docs);
     });
 
     return () => unsubscribe();
@@ -552,7 +754,9 @@ export default function DependencyGraph() {
       handleDeleteTask, 
       updateProjectDeadline, 
       updateProjectTaskInfo,
-      selectedTaskId
+      selectedTaskId,
+      checkApproachingDeadlines,
+      isMobile
     ]);
   
   // Syncing selected task for UI state management
@@ -590,15 +794,16 @@ export default function DependencyGraph() {
           target: data.target,
           sourceHandle: data.sourceHandle || null,
           targetHandle: data.targetHandle || null,
+          type: 'custom',
           animated: false,
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
+            width: 14, // Made arrow smaller
+            height: 14, // Made arrow smaller
           },
           style: {
             stroke: "#6B7280",
-            strokeWidth: 2,
+            strokeWidth: 4, 
           },
         };
       });
@@ -629,7 +834,7 @@ export default function DependencyGraph() {
 
             {/* Project color settings dot */}
             <div className={styles.desktopDetailsRow}>
-              <div ref={pickerRef} className={styles.colorPickerWrapper}>
+              <div ref={desktopPickerRef} className={styles.colorPickerWrapper}>
                 <div
                   className={styles.colorDot}
                   style={{ backgroundColor: projectColor }}
@@ -688,7 +893,7 @@ export default function DependencyGraph() {
           {/* Description row includes conditional hex color picker rendering and editable desctiption
           field text area */}
           <div className={styles.mobileDescriptionRow}>
-              <div ref={pickerRef} className={styles.colorPickerWrapper}>
+              <div ref={mobilePickerRef} className={styles.colorPickerWrapper}>
                 <div
                   className={styles.colorDot}
                   style={{ backgroundColor: projectColor }}
@@ -737,20 +942,37 @@ export default function DependencyGraph() {
           nodes={nodes} 
           edges={edgesWithDynamicStyles}
           nodeTypes={nodeTypes} 
+          edgeTypes={edgeTypes} /* Registered Custom Edge Types */
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
+          onEdgeDoubleClick={onEdgeDoubleClick} 
+          /* Hover events to track which edge is active */
+          onEdgeMouseEnter={(_, edge) => setHoveredEdgeId(edge.id)}
+          onEdgeMouseLeave={() => setHoveredEdgeId(null)}
           defaultViewport={{x: 0, y: 0, zoom: 0.7}}
           onNodeClick={(event, node) => {
+            setShowColorPicker(false);
             setSelectedTaskId(node.id);
           }}
           onPaneClick={() => {
+            setShowColorPicker(false);
             setSelectedTaskId(null);
           }}
         >
           <Background variant="dots" gap={20} size={1} />
+          <ViewportPortal>
+            {snapGuides.x !== null && (
+              <div className={`${styles.snapGuide} ${styles.snapGuideX}`} style={{ left: snapGuides.x }} />
+            )}
+            {snapGuides.y !== null && (
+              <div className={`${styles.snapGuide} ${styles.snapGuideY}`} style={{ top: snapGuides.y }} />
+            )}
+          </ViewportPortal>
           <Controls />
-          <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.1)" />
+          {!isMobile && (
+            <MiniMap nodeColor="#6366F1" maskColor="rgba(0, 0, 0, 0.3)" />
+          )}
         </ReactFlow>
         
         {/* Conditional popover from the bottom task detail component for selecting tasks on mobile */}
@@ -769,6 +991,8 @@ export default function DependencyGraph() {
                 onSave={handleUpdateTask}
                 blockedBy={blockedByTasks}
                 blocking={blockingTasks}
+                teamMembers={teamMembers}
+                projectName={projectName}
               />
             </aside>
           </div>
@@ -791,6 +1015,8 @@ export default function DependencyGraph() {
                 blockedBy={blockedByTasks}
                 blocking={blockingTasks}
                 isMobile={true}
+                teamMembers={teamMembers}
+                projectName={projectName}
               />
             </div>
           </div>
@@ -800,7 +1026,9 @@ export default function DependencyGraph() {
         <CreateTaskModal
           isOpen={showCreateTaskModal}
           onClose={() => setShowCreateTaskModal(false)}
-          onCreateTask={handleCreateTask} />
+          onCreateTask={handleCreateTask}
+          teamMembers={teamMembers} 
+        />
       </div>
     </div>
   );

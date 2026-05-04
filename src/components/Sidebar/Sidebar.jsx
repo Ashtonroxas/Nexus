@@ -161,17 +161,15 @@ function Sidebar({ variant = "desktop", onNavigate }) {
                 My Projects
               </NavLink>
               
-              {/* Activity Feed is temporarily commented out */}
-              {/* <NavLink
+              <NavLink
                 to="/activity"
                 className={({ isActive }) => 
                   `${styles.navButton} ${isActive ? styles.active : ""}`
                 }
                 onClick={handleNav}
               >
-                <Bell size={18} />
                 Activity Feed
-              </NavLink> */}
+              </NavLink> 
             </nav>
           </>
         )}

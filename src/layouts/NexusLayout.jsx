@@ -14,7 +14,7 @@ function NexusLayout() {
       onClick={() => setShowSidebar(true)}
       className={`${styles.hamburger} d-lg-none`}
     >
-      <Menu size={28} color="#6366F1" />
+      <Menu size={28} color="#3b82f6" />
     </Button>
   );
 
@@ -38,10 +38,8 @@ function NexusLayout() {
         </aside>
 
         <main className={`${styles.contentColumn} p-3`}>
-          {/* Passes toggleSidebar down to your Team page */}
           <Outlet context={{ 
             menuButton, 
-            toggleSidebar: () => setShowSidebar(true) 
           }}/>
         </main>
       </div>

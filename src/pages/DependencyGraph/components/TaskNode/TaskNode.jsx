@@ -4,11 +4,11 @@ import MobileTaskNode from "./MobileTaskNode";
 
 function TaskNode(props) {
     // UI responsiveness listener for less than large screens
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     useEffect(() => {
         const handleResize = () => {
-            setIsMobile(window.innerWidth < 992);
+            setIsMobile(window.innerWidth < 768);
         };
 
         window.addEventListener("resize", handleResize);

@@ -50,12 +50,35 @@
   color: #111827;
   text-align: center;
 }
+
 .handle {
-  width: 10px;
-  height: 10px;
-  background: #6B7280;
-  border: 2px solid #FFFFFF;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
 }
+
+.handle::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 12px solid #6B7280;
+}
+.handleSource {
+  right: -12px;
+}
+.handleTarget {
+  left: -12px;
+}
+
 .assignee {
   width: 20px;
   height: 20px;

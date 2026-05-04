@@ -1,20 +1,21 @@
 import { Col, ProgressBar } from "react-bootstrap";
 import styles from "./ProjectCard.module.css";
-import { X, Users, Calendar, CheckSquare } from "lucide-react";
+import { X, Users, Calendar, CheckSquare, LogOut } from "lucide-react";
 import { useState } from "react";
 import { motion } from 'framer-motion';
 import ConfirmModal from "../../../../components/ConfirmModal/ConfirmModal";
 
 const MotionCol = motion.create(Col);
 
-function ProjectCard({ project, onClick, canDelete, onDelete }) {
-  const progress = 
+function ProjectCard({ project, onClick, canDelete, onDelete, canLeave, onLeave }) {
+  const progress =
     project.totalTasks > 0
       ? Math.round((project.completedTasks / project.totalTasks) * 100)
       : 0;
 
-  // status tracking for delete confirmation modal
+  // status tracking for delete/leave confirmation modals (reuses ConfirmModal)
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
   const handleCloseDeleteModal = () => setShowDeleteModal(false);
   const handleShowDeleteModal = () => setShowDeleteModal(true);
 
@@ -24,13 +25,18 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
     handleCloseDeleteModal();
   };
 
+  const handleConfirmLeave = async () => {
+    await onLeave?.(project.id);
+    setShowLeaveModal(false);
+  };
+
   return (
     <>
       <MotionCol layout transition = {{layout: {duration: 0.4, ease: "easeInOut"}}} //transition for sorting animation
         id={styles["project-card"]} className="rounded-4 p-4" onClick={onClick} role="button">
         <div className="d-flex justify-content-between">
           <CheckSquare size={50} color={project.color} />
-          {canDelete && ( //conditional rendering of delete button
+          {canDelete && ( //conditional rendering of delete button (owners)
             <X size={25}
                color="#EF4444"
                role="button"
@@ -38,6 +44,17 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
                onClick={(e) => {
                 e.stopPropagation();
                 handleShowDeleteModal();
+               }}
+            />
+          )}
+          {!canDelete && canLeave && ( //conditional rendering of leave button (non-owners)
+            <LogOut size={22}
+               color="#EF4444"
+               role="button"
+               style={{cursor: "pointer"}}
+               onClick={(e) => {
+                e.stopPropagation();
+                setShowLeaveModal(true);
                }}
             />
           )}
@@ -91,6 +108,15 @@ function ProjectCard({ project, onClick, canDelete, onDelete }) {
         title="Delete Project?"
         message={`Are you sure you want to delete "${project.name}" for everyone? This action is irreversible.`}
         confirmText="Delete"
+        cancelText="Cancel"/>
+
+      <ConfirmModal
+        show={showLeaveModal}
+        onHide={() => setShowLeaveModal(false)}
+        onConfirm={handleConfirmLeave}
+        title="Leave Project?"
+        message={`Are you sure you want to leave "${project.name}"? You'll lose access, but past activity will remain in your feed.`}
+        confirmText="Leave"
         cancelText="Cancel"/>
     </>
   );

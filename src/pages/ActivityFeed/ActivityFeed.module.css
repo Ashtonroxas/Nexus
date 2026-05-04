@@ -1,0 +1,346 @@
+/* Activity Feed Layout & Container */
+
+/* Main wrapper for the entire feed. It takes up the full height minus a small margin and hides any overflow to keep things neat. */
+.feedContainer {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 2rem);
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid var(--outlines, #E5E7EB);
+  overflow: hidden;
+}
+
+/* Header Section */
+/* The top bar containing the title, unread count, and 'Mark all as read' button. */
+.feedHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--outlines, #E5E7EB);
+  background-color: #F8FAFC;
+}
+
+/* Groups the mobile menu, title, and badge together on the left side. */
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Wrapper for the mobile hamburger menu. Hidden on desktop. */
+.mobileMenuWrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* Hides the mobile menu button on screens 992px and wider. */
+@media (min-width: 992px) {
+  .mobileMenuWrapper {
+    display: none;
+  }
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+}
+
+/* The red notification pill showing the number of unread items. */
+.unreadBadge {
+  background-color: #EF4444;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* Styling for the interactive "Mark all as read" text button. */
+.markReadBtn {
+  background: transparent;
+  border: none;
+  color: #6366F1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.markReadBtn:hover:not(:disabled) {
+  background-color: #EEF2FF;
+}
+
+/* Muted styling when there are no unread notifications left to mark. */
+.markReadBtn:disabled {
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+/* Navigation Tabs */
+
+/* Container for the "All Activity" and "Unread" toggle tabs. */
+.tabsContainer {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--outlines, #E5E7EB);
+}
+
+/* Base styling for each tab. */
+.tab {
+  background: none;
+  border: none;
+  padding: 1rem 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #6B7280;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Darkens the text for the currently selected tab. */
+.tab.activeTab {
+  color: #111111;
+  font-weight: 600;
+}
+
+/* Adds the active underline indicator below the currently selected tab. */
+.tab.activeTab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #6366F1;
+}
+
+/* Feed Content & Notification Cards */
+
+/* The scrollable area where all the notifications live. */
+.notificationsList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: #F8FAFC;
+}
+
+/* Centered message block when there are zero notifications to display. */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6B7280;
+  text-align: center;
+}
+
+.emptyState p {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 1rem 0 0.25rem 0;
+}
+
+.emptyState span {
+  font-size: 0.875rem;
+}
+
+/* The individual notification item styling */
+.notificationCard {
+  background-color: #FFFFFF;
+  border: 1px solid var(--outlines, #E5E7EB);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.notificationCard:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #D1D5DB;
+}
+
+/* Distinguishes unread cards with a light blue background. */
+.unreadCard {
+  background-color: #F0F5FF;
+  border-color: #BFDBFE;
+}
+
+/* The small blue dot on top right of unread notification. */
+.unreadDot {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.25rem;
+  width: 10px;
+  height: 10px;
+  background-color: #3B82F6;
+  border-radius: 50%;
+}
+
+/* Aligns the icon and the text block side-by-side inside the card. */
+.cardContent {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* Icons & Theming */
+
+/* Base circular shape for all notification icons. */
+.iconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Specific color mappings for different event types */
+.iconInvite {
+  background-color: #EEF2FF;
+  color: #6366F1;
+}
+
+.iconSuccess {
+  background-color: #F0FDF4;
+  color: #22C55E;
+}
+
+.iconInfo {
+  background-color: #E0F2FE;
+  color: #0284C7;
+}
+
+.iconWarning {
+  background-color: #FEF3C7;
+  color: #D97706;
+}
+
+.iconDanger {
+  background-color: #FEF2F2;
+  color: #DC2626;
+}
+
+.iconDefault {
+  background-color: #F3F4F6;
+  color: #6B7280;
+}
+
+/* Typography & Action Buttons */
+
+/* Stacks the main notification message, timestamp, and optional buttons vertically. */
+.textStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-right: 1.5rem; 
+}
+
+.mainText {
+  font-size: 0.95rem;
+  color: #1F2937;
+  line-height: 1.4;
+}
+
+.mainText strong {
+  font-weight: 600;
+  color: #111111;
+}
+
+/* Contains the clock icon and time string */
+.timeText {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+/* Wrapper for the Accept/Decline buttons on invites. */
+.actionButtons {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* Shared structural styling for Accept/Decline buttons. */
+.acceptBtn, .declineBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* Specific coloring for Accept */
+.acceptBtn {
+  background-color: #6366F1;
+  color: white;
+  border: none;
+}
+
+.acceptBtn:hover {
+  background-color: #4F46E5;
+}
+
+/* Specific coloring for Decline */
+.declineBtn {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+}
+
+.declineBtn:hover {
+  background-color: #F3F4F6;
+}
+
+/* Text that appears after an invite has been responded to. */
+.statusFeedbackAccepted {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #22C55E;
+  font-weight: 500;
+}
+
+.statusFeedbackDeclined {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+/*  Mobile */
+
+@media (max-width: 640px) {
+  .feedHeader {
+    padding: 1rem;
+  }
+  
+  /* Stacks the Accept and Decline buttons vertically instead of side-by-side. */
+  .actionButtons {
+    flex-direction: column;
+  }
+  
+  /* Makes buttons span the full width of the card on mobile. */
+  .acceptBtn, .declineBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

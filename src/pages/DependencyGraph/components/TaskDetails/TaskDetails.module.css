@@ -93,39 +93,15 @@
   color: #6B7280;
 }
 
-/* Select menu stylings */
-.selectWrap {
+.pillTag {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  width: fit-content;
-  border: 1px solid #D1D5DB;
-  border-radius: 6px;
-  background: #FFFFFF;
-  padding: 3px 8px;
-}
-.statusSelect {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 11px;
-  line-height: 1;
-  color: #111827;
-  padding: 0 14px 0 0;
-  appearance: none;
-  cursor: pointer;
-}
-.pillSelect {
   border-radius: 999px;
   font-weight: 500;
   font-size: 11px;
   line-height: 1;
-  padding: 5px 22px 5px 10px;
-  width: fit-content;
+  padding: 5px 10px;
   border: 1px solid transparent;
-  outline: none;
-  appearance: none;
-  cursor: pointer;
 }
 
 /* Status display styling */
@@ -174,7 +150,6 @@
 }
 
 /* Inline information stylings */
-.assigneeRow,
 .dateRow {
   display: inline-flex;
   align-items: center;
@@ -197,16 +172,6 @@
   flex-shrink: 0;
 }
 
-.inlineInput {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 12px;
-  color: #111827;
-  padding: 0;
-  min-width: 90px;
-}
-
 .dateInput {
   border: none;
   outline: none;
@@ -219,6 +184,110 @@
 .dateIcon {
   color: #6B7280;
   flex-shrink: 0;
+}
+
+/* Custom styled dropdowns */
+.dropdownContainer {
+  position: relative;
+  width: 100%;
+}
+
+.dropdownTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdownTrigger:hover {
+  border-color: #6366F1;
+  background: #F8FAFC;
+}
+
+.dropdownTriggerOpen {
+  border-color: #6366F1;
+  background: #F8FAFC;
+}
+
+.dropdownValue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dropdownText {
+  font-size: 12px;
+  color: #111827;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assigneeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.assigneeText {
+  font-size: 12px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.chevron {
+  color: #6B7280;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+/* Styled dropdown card for Member Names*/
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  cursor: pointer;
+  background: #FFFFFF;
+  transition: 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdownItem:hover {
+  background: #F8FAFC;
+}
+
+.dropdownItem:active {
+  background: #F0F4FF;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 10px 20px rgba(16, 24, 40, 0.1);
+  z-index: 20;
+  overflow: hidden;
+  white-space: nowrap; 
 }
 
 /* Dependency sections */

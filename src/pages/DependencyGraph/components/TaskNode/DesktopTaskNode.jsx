@@ -45,7 +45,7 @@ function DesktopTaskNode({ id, data, selected }) {
       <Handle
         type="target"
         position={Position.Left}
-        className={styles.handle}
+        className={`${styles.handle} ${styles.handleTarget}`}
       />
 
       <div className={styles.taskCodeRow}>
@@ -95,7 +95,7 @@ function DesktopTaskNode({ id, data, selected }) {
       <Handle
         type="source"
         position={Position.Right}
-        className={styles.handle}
+        className={`${styles.handle} ${styles.handleSource}`}
       />
     </div>
 

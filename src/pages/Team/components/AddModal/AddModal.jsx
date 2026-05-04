@@ -1,7 +1,5 @@
 import { Modal, Button, Form } from "react-bootstrap";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../firebase/firebase";
 import styles from "./AddModal.module.css";
 
 function AddModal({
@@ -11,54 +9,25 @@ function AddModal({
   title,
   confirmText,
   cancelText,
-  excludeUids = new Set(),
+  suggestions = [],
 }) {
   const [input, setInput] = useState("");
   const [role, setRole] = useState("member");
-  const [allUsers, setAllUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
-  // Fetch all users once when the modal opens
-  useEffect(() => {
-    if (!show) {
-      setAllUsers([]);
-      return;
-    }
-
-    const fetchUsers = async () => {
-      setIsLoading(true);
-      const snap = await getDocs(collection(db, "users"));
-      // store uid alongside each user's data
-      // pre-lowercase once so the filter doesn't repeat it on every keystroke
-      const users = snap.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          uid: doc.id,
-          ...data,
-          nameLower: (data.displayName || "").toLowerCase(),
-          emailLower: (data.email || "").toLowerCase(),
-        };
-      });
-      setAllUsers(users);
-      setIsLoading(false);
-    };
-
-    fetchUsers();
-  }, [show]);
 
   const results = useMemo(() => {
     const term = input.trim().toLowerCase();
     if (!term) return [];
-    return allUsers
+
+    return suggestions
       .filter((user) => {
-        if (excludeUids.has(user.uid)) return false;
-        return user.nameLower.startsWith(term) || user.emailLower.startsWith(term);
+        const nameLower = (user.displayName || "").toLowerCase();
+        const emailLower = (user.email || "").toLowerCase();
+        return nameLower.startsWith(term) || emailLower.startsWith(term);
       })
       .slice(0, 6);
-  }, [input, allUsers, excludeUids]);
+  }, [input, suggestions]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -71,22 +40,22 @@ function AddModal({
   }, []);
 
   const handleSelect = (user) => {
-    setSelectedUser(user);
-    setInput(user.displayName);
+    setInput(user.email || "");
     setDropdownOpen(false);
   };
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
-    setSelectedUser(null);
     setDropdownOpen(true);
   };
 
   const handleConfirm = () => {
-    if (!selectedUser) {
+    const email = input.trim();
+    if (!email) {
       return;
     }
-    onConfirm({ user: selectedUser, role });
+
+    onConfirm({ email, role });
     resetState();
     onHide();
   };
@@ -99,7 +68,6 @@ function AddModal({
   const resetState = () => {
     setInput("");
     setRole("member");
-    setSelectedUser(null);
     setDropdownOpen(false);
   };
 
@@ -112,23 +80,21 @@ function AddModal({
       <Modal.Body>
         <Form>
           <Form.Group className="mb-3" controlId="addMemberSearch">
-            <Form.Label>Search by name or email</Form.Label>
+            <Form.Label>Search email</Form.Label>
             <div className={styles.searchWrapper} ref={dropdownRef}>
               <Form.Control
                 type="text"
-                placeholder="Start typing..."
+                placeholder="Enter email address"
                 value={input}
                 onChange={handleInputChange}
                 autoComplete="off"
-                // show a subtle loading hint while the initial fetch is in progress
-                disabled={isLoading}
               />
 
               {dropdownOpen && results.length > 0 && (
                 <div className={styles.dropdown}>
                   {results.map((user) => (
                     <div
-                      key={user.uid}
+                      key={user.uid || user.email}
                       className={styles.dropdownItem}
                       onMouseDown={() => handleSelect(user)}
                     >
@@ -147,8 +113,8 @@ function AddModal({
               )}
 
               {/* no results message only shown after typing with a valid user list */}
-              {dropdownOpen && !isLoading && input.trim() && results.length === 0 && (
-                <div className={styles.noResults}>No users found</div>
+              {dropdownOpen && input.trim() && results.length === 0 && input.includes("@") && (
+                <div className={styles.noResults}>Press "Send Invite" to invite user</div>
               )}
             </div>
           </Form.Group>

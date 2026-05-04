@@ -6,7 +6,7 @@ import ProjectCard from "./components/ProjectCard/ProjectCard";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { ArrowUpDown } from "lucide-react";
 
-import { 
+import {
   collection,
   onSnapshot,
   addDoc,
@@ -14,9 +14,12 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  updateDoc,
+  arrayRemove,
   query,
   where,
-  or 
+  or,
+  getDocs
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 
@@ -40,34 +43,46 @@ function MyProjects() {
     const q = query(
       collection(db, "projects"),
       or(
-        where("memberIds", "array-contains", currentUser.uid), // Catches new projects
-        where("ownerId", "==", currentUser.uid)                // Catches old projects
+        where("memberIds", "array-contains", currentUser.uid), // Catches projects of which user is a member
+        where("ownerId", "==", currentUser.uid)                // Catches projects of which user is owner
       )
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const projectsArr = snapshot.docs.map((doc) => {
-        const data = doc.data();
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const projectsArr = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const data = doc.data();
+          
+          // Fetch member count from the members subcollection (source of truth)
+          let memberCount = 1;
+          try {
+            const membersSnapshot = await getDocs(collection(db, "projects", doc.id, "members"));
+            memberCount = membersSnapshot.size || 1;
+          } catch (error) {
+            // Fallback to memberIds array length if subcollection doesn't exist
+            memberCount = data.memberIds ? data.memberIds.length : 1;
+          }
 
-        return {
-          id: doc.id,
-          name: data.name || "Untitled Project",
-          description: data.description || "",
-          completedTasks: data.completedTaskCount || 0,
-          totalTasks: data.taskCount || 0,
-          owner: data.ownerId || "",
-          dueDate: data.dueDate?.toDate? data.dueDate.toDate() : null,
-          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
-          numMembers: data.memberCount || 1,
-          color: data.color || "#6366F1",
-        };
-      });
+          return {
+            id: doc.id,
+            name: data.name || "Untitled Project",
+            description: data.description || "",
+            completedTasks: data.completedTaskCount || 0,
+            totalTasks: data.taskCount || 0,
+            owner: data.ownerId || "",
+            dueDate: data.dueDate?.toDate? data.dueDate.toDate() : null,
+            updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+            numMembers: memberCount,
+            color: data.color || "#3b82f6",
+          };
+        })
+      );
 
       setProjects(projectsArr);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]);
 
   // Create new project and store it in firestore with default initializations
   const handleNewProject = async () => {
@@ -108,6 +123,19 @@ function MyProjects() {
     }
   };
 
+  // Current user leaves a project (non-owners only). Past activities remain
+  const handleLeaveProject = async (projectId) => {
+    if (!currentUser) return;
+    try {
+      await deleteDoc(doc(db, "projects", projectId, "members", currentUser.uid));
+      await updateDoc(doc(db, "projects", projectId), {
+        memberIds: arrayRemove(currentUser.uid),
+      });
+    } catch (error) {
+      console.error("Error leaving project: ", error);
+    }
+  };
+
   // Custom sorting function based on deadline, recency, progress
   const sortedProjects = [...projects].sort((a, b) => {
     if (sortBy === "dueDate") {
@@ -126,24 +154,42 @@ function MyProjects() {
     return 0;
   });
 
-  // Handling searching functionality
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log("Searching for:", searchTerm);
-  };
+  // Helper to return name of sort type
+  const getSortType = (sortTerm) => {
+  if (sortBy === "recent") {
+    return "Recently Edited"
+  }
+  if (sortBy === "dueDate") {
+    return "Approaching Deadline"
+  }
+  if (sortBy === "progress") {
+    return "Most Progress"
+  }
+}
+
+  // Filter the sorted projects based on the search term. Checks case-insensitively and 
+  // looks for matches in project name and description
+  const filteredProjects = sortedProjects.filter((project) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true; // default case to show all projects
+
+    return (
+      project.name.toLowerCase().includes(term) ||
+      project.description.toLowerCase().includes(term)
+    );
+  });
 
   return (
     <div className="d-flex flex-column">
       {/* Top bar - search on desktop*/}
       <Row className="p-3 order-2 order-lg-1">
-        <Form onSubmit={(e) => handleSearch(e)}>
+        <Form>
           <Form.Control
             type="search"
             placeholder="Search projects"
             value={searchTerm}
             size="lg"
             onChange={(e) => setSearchTerm(e.target.value)}
-            onSubmit={() => handleSearch()}
           />
         </Form>
       </Row>
@@ -154,7 +200,13 @@ function MyProjects() {
             {menuButton}
             <div>
               <h2>My Projects</h2>
-              <p>View and manage all your projects • {numProjects} active projects</p>
+              <p>
+                View and manage all your projects • 
+                {searchTerm.trim()
+                  ? ` ${filteredProjects.length} matching project${filteredProjects.length !== 1 ? "s " : " "}`
+                  : ` ${numProjects} active project${numProjects !== 1 ? "s " : " "}`}
+              • {`${getSortType(sortBy)}`}
+                  </p>
             </div>
           </div>
         </Col>
@@ -188,17 +240,19 @@ function MyProjects() {
       </Row>
       {/* Rendering parsed project information for user */}
       <Row className="p-3 gap-3 justify-content-evenly justify-content-md-start order-3">
-        {sortedProjects.map((project) => {
+        {filteredProjects.map((project) => {
           const currentUserId = currentUser?.uid;
           const canDelete = project.owner === currentUserId; //verify user priveleges
 
           return (
-            <ProjectCard 
+            <ProjectCard
               key={project.id}
               project={project}
               onClick={() => navigate(`/projects/${project.id}`)}
               canDelete={canDelete}
               onDelete={handleDeleteProject}
+              canLeave={!canDelete}
+              onLeave={handleLeaveProject}
             />
           );
         })}

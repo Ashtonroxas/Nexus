@@ -15,7 +15,7 @@ function MobileTaskNode({ data, selected }) {
       <Handle
         type="target"
         position={Position.Left}
-        className={styles.handle}
+        className={`${styles.handle} ${styles.handleTarget}`}
       /> 
 
       {/* Node circle shape depicting abbreviated fields - conditional styling if node is selected */}
@@ -33,7 +33,7 @@ function MobileTaskNode({ data, selected }) {
       <Handle
         type="source"
         position={Position.Right}
-        className={styles.handle}
+        className={`${styles.handle} ${styles.handleSource}`}
       />
     </div>
   );
